@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLUE — Field (V3)</title>
+<link rel="icon" href="blue-logo.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;900&display=swap" rel="stylesheet">
+
+<style>
+/* ===================================================================
+   BLUE — V3 · THE FIELD
+
+   Not a cylinder. A shallow arc (radius ~3.2x the viewport) carrying a
+   scattered field of work. Three things stop it reading as a tunnel:
+     · the bow is gentle, so curvature reads as perspective, not a tube
+     · every tile sits at its own depth, so there is no shell surface
+     · work is grouped into clusters with real emptiness between them,
+       and the field HAS ENDS — you can reach the edge of the world
+   =================================================================== */
+:root{
+  --navy:#0F437F;
+  --orange:#F9AF1A;
+  --ink:#08284C;
+  --glide:cubic-bezier(.16,1,.3,1);
+}
+*{ box-sizing:border-box; }
+html,body{ height:100%; margin:0; overflow:hidden; }
+body{
+  background:#fff; color:var(--navy);
+  font-family:'Poppins',system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+.meta{ font-size:11px; font-weight:500; letter-spacing:.24em; text-transform:uppercase; }
+
+/* -------------------------------------------------------------------
+   NAVIGATION
+   ------------------------------------------------------------------- */
+header{
+  position:fixed; top:0; left:0; right:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:15px 20px;
+  background:rgba(255,255,255,.7);
+  -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(15,67,127,.07);
+}
+.logo-crop{ position:relative; overflow:hidden; aspect-ratio:969/510; flex:none; }
+.logo-crop img{ display:block; max-width:none;
+  width:154.799%; margin-left:-27.245%; margin-top:-50.980%; }
+.filters{ display:flex; align-items:center; gap:2px; flex-wrap:wrap; justify-content:center; }
+.f-btn{
+  font-family:inherit; border:0; background:transparent; cursor:pointer;
+  color:rgba(15,67,127,.5); padding:8px 12px; border-radius:999px;
+  font-size:11px; font-weight:600; letter-spacing:.13em; text-transform:uppercase;
+  transition:color .25s, background-color .25s;
+}
+.f-btn:hover{ color:var(--navy); }
+.f-btn[aria-pressed="true"]{ color:#fff; background:var(--navy); }
+.f-btn:focus-visible,.icon-btn:focus-visible{ outline:2px solid var(--orange); outline-offset:2px; }
+.icon-btn{
+  display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-family:inherit;
+  border:0; border-radius:999px; padding:10px 16px;
+  background:var(--orange); color:var(--navy);
+  font-size:11px; font-weight:600; letter-spacing:.13em; text-transform:uppercase;
+  transition:transform .3s var(--glide);
+}
+.icon-btn:hover{ transform:translateY(-2px); }
+.icon-btn.ghost{ background:transparent; color:rgba(15,67,127,.55); }
+.icon-btn.ghost:hover{ color:var(--navy); }
+.sp{ display:inline-block; transition:transform .6s var(--glide); }
+body.spinning .sp{ transform:rotate(360deg); }
+
+/* -------------------------------------------------------------------
+   THE FIELD
+   ------------------------------------------------------------------- */
+#stage{
+  position:fixed; inset:0; overflow:hidden;
+  perspective:1300px; perspective-origin:50% 47%;
+  touch-action:none; cursor:grab;
+  background:linear-gradient(180deg,#fff 0%,#F4F7FA 62%,#E7EDF4 100%);
+}
+#stage.dragging{ cursor:grabbing; }
+@media (pointer:fine){ #stage,#stage.dragging{ cursor:none; } }
+
+#world{
+  position:absolute; left:50%; top:50%; width:0; height:0;
+  transform-style:preserve-3d; will-change:transform;
+}
+
+.tile{
+  position:absolute; left:0; top:0;
+  transform-style:preserve-3d; will-change:transform,opacity;
+  transition:transform 1s var(--glide);
+}
+.tile.snap{ transition:none; }
+.tile.out{ opacity:0 !important; pointer-events:none !important; }
+
+/* container-type lets every artefact size itself in cqw, so one design
+   scales perfectly across wildly different tile sizes with no JS. */
+.art{
+  position:relative; width:100%; height:100%; overflow:hidden;
+  container-type:size;
+  background:var(--navy);
+  box-shadow:0 16px 44px rgba(8,40,76,.26);
+  transition:box-shadow .5s var(--glide);
+}
+.tile:hover .art{ box-shadow:0 30px 80px rgba(8,40,76,.5); }
+.live .art{ animation:bob var(--bob,9s) ease-in-out infinite alternate; }
+@keyframes bob{ from{ transform:translateY(-0.8%) } to{ transform:translateY(0.8%) } }
+
+/* ---- photography: one duotone unifies every source ---------------- */
+.ph{ position:absolute; inset:0; }
+.ph img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  filter:url(#duo) contrast(1.05); transform:scale(1.04);
+}
+.ph.cold img{ filter:url(#duoCold) contrast(1.05); }
+.live .ph img{ animation:kb var(--kb,24s) ease-in-out infinite alternate; }
+@keyframes kb{ from{ transform:scale(1.03) } to{ transform:scale(1.13) } }
+.ph .gr{
+  position:absolute; inset:0; opacity:.13; mix-blend-mode:overlay;
+  background-image:radial-gradient(rgba(255,255,255,.7) .5px, transparent .5px);
+  background-size:3px 3px;
+}
+
+.cap{
+  position:absolute; left:0; right:0; bottom:0; z-index:9; padding:4cqw 4cqw;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:2cqw;
+  color:#fff; opacity:0; transform:translateY(8px); pointer-events:none;
+  background:linear-gradient(to top, rgba(8,40,76,.94), rgba(8,40,76,0));
+  transition:opacity .35s, transform .35s var(--glide);
+}
+.tile:hover .cap{ opacity:1; transform:none; }
+.cap .t{ font-size:4.6cqw; font-weight:600; line-height:1.15; }
+.cap .c{ font-size:2.8cqw; font-weight:500; letter-spacing:.14em; text-transform:uppercase; opacity:.72; }
+
+.badge{
+  position:absolute; top:3cqw; left:3cqw; z-index:9;
+  background:var(--orange); color:var(--navy);
+  font-size:2.6cqw; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+  padding:1.2cqw 2.4cqw; border-radius:999px;
+}
+
+/* ===================================================================
+   DESIGNED ARTEFACTS — the backbone of the wall.
+   Website screens, social posts, ad previews, brand sheets, type
+   specimens, dashboards, wireframes. All original, all navy/orange/
+   white, no third-party marks. Everything sized in cqw so one design
+   holds at any tile size.
+   =================================================================== */
+.af{ position:absolute; inset:0; background:#fff; display:flex; flex-direction:column; }
+.af.dk{ background:var(--navy); color:#fff; }
+.af.og{ background:var(--orange); color:var(--navy); }
+.af .pad{ flex:1; padding:5cqw; display:flex; flex-direction:column; gap:3cqw; min-height:0; }
+.af .lbl{ font-size:2.6cqw; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+          color:rgba(15,67,127,.45); }
+.af.dk .lbl{ color:rgba(255,255,255,.5); }
+.af .big{ font-weight:900; line-height:.88; letter-spacing:-.03em; }
+
+/* browser chrome */
+.bw{ display:flex; align-items:center; gap:1.6cqw; padding:2.6cqw 3cqw; flex:none;
+     background:#E9EFF5; border-bottom:1px solid rgba(15,67,127,.10); }
+.bw i{ width:2.4cqw; height:2.4cqw; border-radius:50%; background:rgba(15,67,127,.22); }
+.bw .u{ margin-left:2cqw; flex:1; height:4.6cqw; border-radius:999px; background:#fff;
+        border:1px solid rgba(15,67,127,.12); display:flex; align-items:center;
+        padding:0 2.4cqw; font-size:2.4cqw; color:rgba(15,67,127,.5); letter-spacing:.05em; }
+
+.nv{ display:flex; align-items:center; justify-content:space-between; }
+.nv b{ font-weight:900; font-size:4.4cqw; letter-spacing:-.02em; }
+.nv span{ display:flex; gap:2cqw; }
+.nv span i{ width:5.5cqw; height:1.2cqw; border-radius:2px; background:rgba(15,67,127,.22); }
+.af.dk .nv span i{ background:rgba(255,255,255,.3); }
+
+.blk{ background:var(--navy); border-radius:1px; }
+.org{ background:var(--orange); border-radius:1px; }
+.gry{ background:rgba(15,67,127,.10); border-radius:1px; }
+.row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:2.2cqw; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:2.2cqw; }
+
+/* social post */
+.sp-hd{ display:flex; align-items:center; gap:2.4cqw; padding:3cqw 3.4cqw; flex:none; }
+.sp-hd .av{ width:7cqw; height:7cqw; border-radius:50%; background:var(--orange); flex:none; }
+.sp-hd .nm{ font-size:3cqw; font-weight:600; letter-spacing:.04em; }
+.sp-hd .dt{ margin-left:auto; letter-spacing:.3em; font-size:3cqw; color:rgba(15,67,127,.4); }
+.sp-img{ flex:1; position:relative; overflow:hidden; background:var(--navy); min-height:0; }
+.sp-act{ display:flex; gap:2.6cqw; padding:2.8cqw 3.4cqw; flex:none; align-items:center; }
+.sp-act i{ width:4.4cqw; height:4.4cqw; border:1.1cqw solid var(--navy); border-radius:50%; }
+.sp-act i.sq{ border-radius:1px; }
+.sp-cap{ padding:0 3.4cqw 3.4cqw; font-size:2.8cqw; color:rgba(15,67,127,.6); line-height:1.5; }
+
+/* story frame */
+.st-bar{ display:flex; gap:1cqw; padding:3cqw; }
+.st-bar i{ flex:1; height:1cqw; border-radius:99px; background:rgba(255,255,255,.35); }
+.st-bar i.on{ background:#fff; }
+
+/* ad preview */
+.ad-tag{ font-size:2.4cqw; letter-spacing:.16em; text-transform:uppercase;
+         color:rgba(15,67,127,.42); }
+.ad-cta{ background:var(--orange); color:var(--navy); font-weight:600;
+         font-size:2.8cqw; letter-spacing:.1em; text-transform:uppercase;
+         padding:2.2cqw 0; text-align:center; border-radius:999px; }
+.kpi{ display:flex; align-items:baseline; gap:1.4cqw; }
+.kpi b{ font-weight:900; font-size:9cqw; letter-spacing:-.03em; line-height:1; }
+.kpi span{ font-size:2.6cqw; letter-spacing:.14em; text-transform:uppercase; color:var(--orange); }
+
+/* dashboard */
+.bars{ display:flex; align-items:flex-end; gap:1.8cqw; flex:1; min-height:0; }
+.bars i{ flex:1; background:var(--orange); border-radius:1px 1px 0 0; }
+.bars i:nth-child(even){ background:rgba(249,175,26,.45); }
+
+/* brand sheet */
+.mk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:3cqw; flex:1; min-height:0; }
+.mk-cell{ border:1px solid rgba(15,67,127,.14); display:grid; place-items:center; }
+.af.dk .mk-cell{ border-color:rgba(255,255,255,.2); }
+.mark{ width:11cqw; height:11cqw; border-radius:50%; border:2.2cqw solid var(--orange); position:relative; }
+.mark::after{ content:''; position:absolute; inset:-2.2cqw; border-radius:50%;
+              border:1px solid rgba(15,67,127,.2); }
+.mark.solid{ background:var(--orange); border-color:var(--orange); }
+.mark.wedge{ border:0; background:var(--orange); border-radius:100% 0 0 0; }
+.mark.wedge::after{ display:none; }
+
+/* swatches */
+.sw{ display:flex; flex:1; gap:2cqw; min-height:0; }
+.sw div{ flex:1; display:flex; flex-direction:column; justify-content:flex-end;
+         padding:2.6cqw; font-size:2.4cqw; font-weight:600; letter-spacing:.08em; }
+
+/* type specimen */
+.ts-aa{ font-weight:900; font-size:34cqw; line-height:.8; letter-spacing:-.05em; }
+.ts-set{ font-size:3.4cqw; letter-spacing:.14em; color:rgba(15,67,127,.5); word-break:break-all; line-height:1.6; }
+.af.dk .ts-set{ color:rgba(255,255,255,.5); }
+
+/* wireframe */
+.wf{ flex:1; display:flex; flex-direction:column; gap:2cqw; min-height:0; }
+.wf i{ border:1px dashed rgba(15,67,127,.35); border-radius:1px; display:block; }
+.wf .n{ position:absolute; font-size:2.4cqw; color:var(--orange); font-weight:600; }
+
+/* layout grid */
+.gcols{ position:absolute; inset:0; display:flex; gap:1.6cqw; padding:5cqw; }
+.gcols i{ flex:1; background:rgba(249,175,26,.22); }
+
+/* ===================================================================
+   MOTION TILES — original looping graphics, no video files.
+   .live is driven by distance from the camera along the field.
+   =================================================================== */
+.mo{ position:absolute; inset:0; overflow:hidden; }
+.m-ring::after{ content:""; position:absolute; left:50%; top:50%; width:14%; height:14%;
+                margin:-7% 0 0 -7%; background:var(--orange); border-radius:50%; }
+.m-ring i{ position:absolute; left:50%; top:50%; border-radius:50%;
+           border:3px solid var(--orange); opacity:0; }
+.live .m-ring i{ animation:ring 3.4s cubic-bezier(.2,.6,.3,1) infinite; }
+.m-ring i:nth-child(2){ animation-delay:1.13s } .m-ring i:nth-child(3){ animation-delay:2.26s }
+@keyframes ring{ 0%{width:0;height:0;margin:0;opacity:0} 12%{opacity:1}
+                 100%{width:190%;height:190%;margin:-95% 0 0 -95%;opacity:0} }
+
+.m-bars{ display:flex; align-items:flex-end; gap:7%; padding:18% 12%; height:100%; }
+.m-bars i{ flex:1; background:var(--orange); height:30%; border-radius:99px 99px 0 0; }
+.live .m-bars i{ animation:bars 1.5s ease-in-out infinite alternate; }
+.m-bars i:nth-child(2){animation-delay:.18s} .m-bars i:nth-child(3){animation-delay:.36s}
+.m-bars i:nth-child(4){animation-delay:.54s} .m-bars i:nth-child(5){animation-delay:.72s}
+@keyframes bars{ from{height:16%} to{height:88%} }
+
+.m-orbit .c{ position:absolute; left:50%; top:50%; width:52%; height:52%;
+             margin:-26% 0 0 -26%; border:2px solid rgba(255,255,255,.4); border-radius:50%; }
+.m-orbit .o{ position:absolute; left:50%; top:50%; width:52%; height:52%; margin:-26% 0 0 -26%; }
+.live .m-orbit .o{ animation:spin 5s linear infinite; }
+.m-orbit .o b{ position:absolute; left:50%; top:-9%; width:18%; height:18%;
+               margin-left:-9%; background:var(--orange); border-radius:50%; display:block; }
+@keyframes spin{ to{ transform:rotate(360deg) } }
+
+.m-wedge b{ position:absolute; left:50%; top:50%; width:56%; height:56%; margin:-28% 0 0 -28%;
+            background:var(--orange); border-radius:100% 0 0 0; display:block; }
+.live .m-wedge b{ animation:wedge 6s cubic-bezier(.6,0,.3,1) infinite; }
+@keyframes wedge{ 0%{transform:rotate(0)} 45%{transform:rotate(180deg)}
+                  55%{transform:rotate(180deg)} 100%{transform:rotate(360deg)} }
+
+.m-scan .g{ position:absolute; inset:0;
+  background-image:linear-gradient(to right,rgba(255,255,255,.22) 1px,transparent 1px),
+                   linear-gradient(to bottom,rgba(255,255,255,.22) 1px,transparent 1px);
+  background-size:15% 15%; }
+.m-scan .l{ position:absolute; left:0; right:0; height:26%;
+  background:linear-gradient(to bottom,transparent,rgba(249,175,26,.85),transparent); }
+.live .m-scan .l{ animation:scan 3.2s ease-in-out infinite alternate; }
+@keyframes scan{ from{top:-26%} to{top:100%} }
+
+.m-wipe i{ position:absolute; inset:0; background:var(--orange); transform:translateX(-100%); }
+.live .m-wipe i{ animation:wipe 4.2s cubic-bezier(.7,0,.2,1) infinite; }
+.m-wipe i:nth-child(2){ background:#fff; animation-delay:.5s; }
+@keyframes wipe{ 0%{transform:translateX(-100%)} 45%{transform:translateX(0)}
+                 55%{transform:translateX(0)} 100%{transform:translateX(100%)} }
+
+.m-morph b{ position:absolute; left:50%; top:50%; width:58%; height:58%; margin:-29% 0 0 -29%;
+            background:var(--orange); display:block; }
+.live .m-morph b{ animation:morph 7s ease-in-out infinite; }
+@keyframes morph{ 0%,100%{border-radius:50%;transform:rotate(0)}
+                  33%{border-radius:100% 0 100% 0;transform:rotate(60deg)}
+                  66%{border-radius:0 100% 0 100%;transform:rotate(-40deg)} }
+
+.m-mar{ display:flex; align-items:center; height:100%; }
+.m-mar span{ font-weight:900; font-size:11cqw; letter-spacing:-.02em;
+             color:var(--orange); white-space:nowrap; padding-right:.4em; }
+.live .m-mar span{ animation:mar 13s linear infinite; }
+@keyframes mar{ to{ transform:translateX(-50%) } }
+
+.m-type{ display:grid; place-items:center; height:100%; }
+.m-type b{ font-weight:900; font-size:38cqw; color:#fff; display:block; }
+.live .m-type b{ animation:flick 4s steps(1) infinite; }
+@keyframes flick{ 0%,49%{opacity:1} 50%,100%{opacity:.22} }
+
+.m-dots{ position:absolute; inset:0;
+  background-image:radial-gradient(var(--orange) 22%, transparent 23%);
+  background-size:11% 11%; }
+.live .m-dots{ animation:dots 8s linear infinite; }
+@keyframes dots{ to{ background-position:11% 11% } }
+
+/* -------------------------------------------------------------------
+   CURSOR / HINT / EDGE
+   ------------------------------------------------------------------- */
+#cur{
+  position:fixed; top:0; left:0; z-index:70; pointer-events:none;
+  width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%;
+  background:var(--orange); display:grid; place-items:center;
+  font-size:0; font-weight:600; letter-spacing:.14em; color:var(--navy);
+  transition:width .28s var(--glide), height .28s var(--glide),
+             margin .28s var(--glide), font-size .28s var(--glide);
+}
+body.hovering #cur{ width:74px; height:74px; margin:-37px 0 0 -37px; font-size:10px; }
+@media (pointer:coarse){ #cur{ display:none } }
+
+#hint{
+  position:fixed; left:50%; bottom:22px; z-index:45; transform:translateX(-50%);
+  color:rgba(15,67,127,.5); pointer-events:none; white-space:nowrap;
+  transition:opacity .6s ease, transform .6s var(--glide);
+}
+body.touched #hint{ opacity:0; transform:translateX(-50%) translateY(10px); }
+
+/* travel readout — where you are in the field */
+#pos{
+  position:fixed; left:50%; bottom:22px; z-index:45; transform:translateX(-50%);
+  display:flex; align-items:center; gap:11px; opacity:0;
+  transition:opacity .5s ease;
+}
+body.touched #pos{ opacity:1; }
+#pos .track{ width:150px; height:2px; background:rgba(15,67,127,.14); position:relative; }
+#pos .track i{ position:absolute; top:-2px; height:6px; width:26px; background:var(--orange); }
+#pos .zone{ color:rgba(15,67,127,.55); min-width:120px; }
+
+/* -------------------------------------------------------------------
+   OVERLAY
+   ------------------------------------------------------------------- */
+#shade{ position:fixed; inset:0; z-index:60; background:#fff; overflow-y:auto;
+        opacity:0; visibility:hidden; transition:opacity .45s, visibility .45s; }
+body.open #shade{ opacity:1; visibility:visible; }
+#stage,header{ transition:transform .5s var(--glide), filter .5s; }
+body.open #stage, body.open header{ transform:scale(.97); filter:blur(9px); pointer-events:none; }
+.sheet{ max-width:1080px; margin:0 auto; padding:92px 20px 80px; }
+.sheet-art{ position:relative; width:100%; aspect-ratio:16/9; overflow:hidden;
+            background:var(--navy); container-type:size; }
+.grid3{ display:grid; gap:26px; grid-template-columns:repeat(3,1fr); margin-bottom:46px; }
+@media (max-width:700px){ .grid3{ grid-template-columns:1fr } }
+#close{ position:fixed; top:15px; right:20px; z-index:62; width:46px; height:46px;
+        border-radius:50%; border:0; cursor:pointer; background:var(--navy); color:#fff;
+        font-size:19px; transition:transform .3s var(--glide); }
+#close:hover{ transform:rotate(90deg) }
+.navbtn{ font-family:inherit; background:0; border:0; cursor:pointer; padding:10px 0;
+         color:rgba(15,67,127,.55); font-size:11px; font-weight:600;
+         letter-spacing:.16em; text-transform:uppercase; transition:color .25s; }
+.navbtn:hover{ color:var(--navy) }
+.foot{ display:flex; align-items:center; justify-content:space-between;
+       border-top:1px solid rgba(15,67,127,.12); padding-top:22px; }
+.dim{ color:rgba(15,67,127,.62); max-width:62ch; line-height:1.7; font-size:16px; }
+
+@media (max-width:760px){
+  header{ padding:10px 12px; gap:8px; flex-wrap:wrap }
+  .filters{ order:3; width:100%; justify-content:flex-start; overflow-x:auto }
+  .f-btn{ padding:6px 9px; font-size:10px; letter-spacing:.06em; white-space:nowrap }
+  .icon-btn{ padding:9px 12px; font-size:10px; letter-spacing:.06em }
+  .sheet{ padding:80px 14px 60px }
+  #pos .track{ width:90px } #pos .zone{ min-width:0 }
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation:none !important; }
+  .tile{ transition:none !important; }
+  body.open #stage, body.open header{ filter:none; transform:none }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <a href="index.html" class="logo-crop" style="width:94px" aria-label="BLUE Advertising Agency">
+    <img src="blue-logo.jpg" alt="BLUE Advertising Agency">
+  </a>
+  <nav class="filters" id="filters" aria-label="Filter work"></nav>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button class="icon-btn ghost" id="about-btn" type="button">About</button>
+    <button class="icon-btn" id="shuffle" type="button"><span class="sp">↻</span> Shuffle</button>
+  </div>
+</header>
+
+<!-- duotone: black -> navy, white -> orange (plus a cold navy -> white) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="duo" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0.33 0.34 0.33 0 0  0.33 0.34 0.33 0 0  0.33 0.34 0.33 0 0  0 0 0 1 0"/>
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="0.059 0.976"/>
+      <feFuncG type="table" tableValues="0.263 0.686"/>
+      <feFuncB type="table" tableValues="0.498 0.102"/>
+    </feComponentTransfer>
+  </filter>
+  <filter id="duoCold" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" values="0.33 0.34 0.33 0 0  0.33 0.34 0.33 0 0  0.33 0.34 0.33 0 0  0 0 0 1 0"/>
+    <feComponentTransfer>
+      <feFuncR type="table" tableValues="0.059 1"/>
+      <feFuncG type="table" tableValues="0.263 1"/>
+      <feFuncB type="table" tableValues="0.498 1"/>
+    </feComponentTransfer>
+  </filter>
+</defs></svg>
+
+<main id="stage"><div id="world"></div></main>
+
+<div id="hint" class="meta">Scroll or drag to travel the field</div>
+<div id="pos"><span class="zone meta" id="zone"></span><span class="track"><i></i></span></div>
+<div id="cur">View</div>
+
+<div id="shade" role="dialog" aria-modal="true" aria-label="Detail">
+  <button id="close" type="button" aria-label="Close">✕</button>
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ==============================================================
+     ARTEFACTS
+     Most of what an agency makes is not photography — it is screens,
+     posts, ad sets, brand sheets, type and dashboards. Those are
+     authored here as real markup, which is both more honest to BLUE's
+     services and entirely original.
+     ============================================================== */
+  var AF = {
+    site: function(d){
+      return '<div class="af">'+
+        '<div class="bw"><i></i><i></i><i></i><div class="u">blue.agency'+(d.path||'')+'</div></div>'+
+        '<div class="pad">'+
+          '<div class="nv"><b>blue</b><span><i></i><i></i><i></i></span></div>'+
+          '<div class="big" style="font-size:11cqw">'+(d.h||'SEE THE<br>BIGGER')+'</div>'+
+          '<div class="blk" style="flex:1;min-height:0"></div>'+
+          '<div class="row3" style="height:14%"><i class="gry"></i><i class="gry"></i><i class="org"></i></div>'+
+        '</div></div>';
+    },
+    app: function(){
+      return '<div class="af dk">'+
+        '<div class="pad" style="gap:2.6cqw">'+
+          '<div class="lbl">09:41 &nbsp;·&nbsp; App</div>'+
+          '<div class="big" style="font-size:9cqw">Today</div>'+
+          '<div class="row2" style="height:26%"><i class="org"></i><i style="background:rgba(255,255,255,.16)"></i></div>'+
+          '<div style="flex:1;min-height:0;background:rgba(255,255,255,.10)"></div>'+
+          '<div class="row3" style="height:9%"><i class="org"></i>'+
+            '<i style="background:rgba(255,255,255,.22)"></i><i style="background:rgba(255,255,255,.22)"></i></div>'+
+        '</div></div>';
+    },
+    post: function(d){
+      return '<div class="af">'+
+        '<div class="sp-hd"><span class="av"></span><span class="nm">blue.agency</span>'+
+          '<span class="dt">···</span></div>'+
+        '<div class="sp-img">'+(d.fill||'<div class="m-dots" style="position:absolute;inset:0"></div>')+'</div>'+
+        '<div class="sp-act"><i></i><i class="sq"></i><i></i></div>'+
+        '<div class="sp-cap">'+(d.cap||'New work, out today.')+'</div>'+
+        '</div>';
+    },
+    story: function(d){
+      return '<div class="af dk" style="justify-content:space-between">'+
+        '<div class="st-bar"><i class="on"></i><i class="on"></i><i></i><i></i></div>'+
+        '<div class="pad" style="justify-content:center">'+
+          '<div class="big" style="font-size:14cqw;color:var(--orange)">'+(d.h||'SWIPE')+'</div>'+
+          '<div class="lbl">Story · 04</div></div>'+
+        '<div class="pad" style="flex:none"><div class="ad-cta">'+(d.cta||'See more')+'</div></div>'+
+        '</div>';
+    },
+    ad: function(d){
+      return '<div class="af">'+
+        '<div class="pad" style="gap:2.4cqw">'+
+          '<div class="ad-tag">Sponsored</div>'+
+          '<div class="blk" style="flex:1;min-height:0;position:relative;overflow:hidden">'+
+            '<div class="m-wedge" style="position:absolute;inset:0"><b></b></div></div>'+
+          '<div class="big" style="font-size:6.6cqw">'+(d.h||'Launch week')+'</div>'+
+          '<div class="ad-cta">'+(d.cta||'Learn more')+'</div>'+
+        '</div></div>';
+    },
+    feed: function(){
+      var c=''; for(var i=0;i<9;i++){
+        c+='<i class="'+(i%4===0?'org':(i%3===0?'blk':'gry'))+'"></i>';
+      }
+      return '<div class="af"><div class="pad">'+
+        '<div class="lbl">Grid · 9 up</div>'+
+        '<div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr 1fr;'+
+        'grid-template-rows:1fr 1fr 1fr;gap:1.8cqw">'+c+'</div></div></div>';
+    },
+    dash: function(d){
+      var b=''; var hs=[38,64,49,82,57,96,71];
+      for(var i=0;i<7;i++) b+='<i style="height:'+hs[i]+'%"></i>';
+      return '<div class="af dk"><div class="pad">'+
+        '<div class="lbl">'+(d.l||'Reach · 30 days')+'</div>'+
+        '<div class="kpi"><b>'+(d.n||'2.4M')+'</b><span>'+(d.d||'+18%')+'</span></div>'+
+        '<div class="bars">'+b+'</div></div></div>';
+    },
+    brand: function(){
+      return '<div class="af"><div class="pad">'+
+        '<div class="lbl">Mark · Lockups</div>'+
+        '<div class="mk-grid">'+
+          '<div class="mk-cell"><span class="mark"></span></div>'+
+          '<div class="mk-cell"><span class="mark solid"></span></div>'+
+          '<div class="mk-cell"><span class="mark wedge"></span></div>'+
+          '<div class="mk-cell"><b style="font-weight:900;font-size:7cqw">blue</b></div>'+
+        '</div></div></div>';
+    },
+    swatch: function(){
+      return '<div class="af"><div class="pad">'+
+        '<div class="lbl">Colour system</div>'+
+        '<div class="sw">'+
+          '<div style="background:var(--navy);color:#fff">#0F437F</div>'+
+          '<div style="background:var(--orange);color:var(--navy)">#F9AF1A</div>'+
+          '<div style="background:#fff;color:var(--navy);border:1px solid rgba(15,67,127,.14)">#FFFFFF</div>'+
+        '</div></div></div>';
+    },
+    type: function(d){
+      return '<div class="af'+(d.dk?' dk':'')+'"><div class="pad">'+
+        '<div class="lbl">Poppins · 900 / 500</div>'+
+        '<div class="ts-aa">Aa</div>'+
+        '<div class="ts-set">ABCDEFGHIJKLM<br>NOPQRSTUVWXYZ<br>0123456789</div>'+
+        '</div></div>';
+    },
+    poster: function(d){
+      return '<div class="af '+(d.og?'og':'dk')+'"><div class="pad" style="justify-content:center">'+
+        '<div class="big" style="font-size:'+(d.fs||'12cqw')+'">'+d.h+'</div>'+
+        (d.sub?'<div class="lbl" style="margin-top:3cqw">'+d.sub+'</div>':'')+
+        '</div></div>';
+    },
+    wire: function(){
+      return '<div class="af"><div class="pad">'+
+        '<div class="lbl">Wireframe · v3</div>'+
+        '<div class="wf">'+
+          '<i style="height:14%"></i>'+
+          '<i style="flex:1"></i>'+
+          '<div class="row3" style="height:22%">'+
+            '<i style="border:1px dashed rgba(15,67,127,.35)"></i>'+
+            '<i style="border:1px dashed rgba(15,67,127,.35)"></i>'+
+            '<i style="border:1px dashed rgba(15,67,127,.35)"></i></div>'+
+        '</div></div></div>';
+    },
+    grid: function(){
+      var c=''; for(var i=0;i<8;i++) c+='<i></i>';
+      return '<div class="af"><div class="gcols">'+c+'</div>'+
+        '<div class="pad" style="justify-content:flex-end;position:relative">'+
+        '<div class="lbl">8 col · 24px gutter</div></div></div>';
+    }
+  };
+
+  /* ==============================================================
+     CONTENT
+     Clusters map to the filters, so travelling passes THROUGH the
+     disciplines: campaigns, then social, then digital, then branding,
+     with motion threaded across. Photography is a placeholder accent —
+     swap assets/v3/phNN.jpg for BLUE's real project shots.
+     ============================================================== */
+  var CATS=['All','Campaigns','Social','Digital','Branding','Motion'];
+  var C='Campaigns', SO='Social', DG='Digital', BR='Branding', MO='Motion';
+
+  var ITEMS=[
+    /* ---- CAMPAIGNS ---- */
+    { k:'af', f:'poster', d:{h:'SEE THE<br>BIGGER<br>PICTURE',og:1,fs:'11cqw'}, t:'Brand Platform', c:C, a:0.78 },
+    { k:'ph', src:'ph03.jpg', t:'Drive Time',     c:C, a:1.34 },
+    { k:'ph', src:'ph04.jpg', t:'Space Booked',   c:C, a:1.30 },
+    { k:'af', f:'ad', d:{h:'Launch week',cta:'Learn more'}, t:'Paid Social Set', c:C, a:0.80 },
+    { k:'ph', src:'ph05.jpg', t:'Fly Posting',    c:C, a:1.32 },
+    { k:'ph', src:'ph01.jpg', t:'Wall Work',      c:C, a:0.82 },
+    { k:'ph', src:'ph02.jpg', t:'After Dark',     c:C, a:1.00 },
+    { k:'af', f:'poster', d:{h:'IDEAS<br>THAT<br>SCALE',fs:'12cqw'}, t:'Key Art', c:C, a:0.76 },
+    { k:'mo', m:'m-wipe',  t:'Rollout',  c:MO, a:1.38, lbl:'Transition' },
+
+    /* ---- SOCIAL ---- */
+    { k:'af', f:'post', d:{cap:'Campaign film — out now.'}, t:'Feed Post', c:SO, a:0.80 },
+    { k:'af', f:'story', d:{h:'NEW<br>DROP',cta:'See more'}, t:'Story Frame', c:SO, a:0.56 },
+    { k:'ph', src:'ph06.jpg', t:'Behind The Shot', c:SO, a:0.76, cold:1 },
+    { k:'af', f:'feed', d:{}, t:'Grid Plan', c:SO, a:1.00 },
+    { k:'af', f:'ad', d:{h:'Always on',cta:'Shop now'}, t:'Ad Variant', c:SO, a:0.80 },
+    { k:'af', f:'post', d:{cap:'Behind the scenes, day two.'}, t:'Carousel', c:SO, a:0.80 },
+    { k:'mo', m:'m-mar', t:'Always Moving', c:MO, a:1.45,
+      mar:'BLUE · CAMPAIGNS · SOCIAL · DIGITAL · BRANDING · ' },
+    { k:'mo', m:'m-bars', t:'Reach & Frequency', c:MO, a:0.82, lbl:'Live' },
+
+    /* ---- DIGITAL ---- */
+    { k:'af', f:'site', d:{h:'SEE THE<br>BIGGER'}, t:'Site Build', c:DG, a:1.36 },
+    { k:'af', f:'app',  d:{}, t:'App Screens', c:DG, a:0.54 },
+    { k:'ph', src:'ph07.jpg', t:'Build Sprint', c:DG, a:1.00, cold:1 },
+    { k:'af', f:'wire', d:{}, t:'UX Wireframe', c:DG, a:0.80 },
+    { k:'ph', src:'ph08.jpg', t:'Front End',   c:DG, a:1.00 },
+    { k:'af', f:'dash', d:{l:'Reach · 30 days',n:'2.4M',d:'+18%'}, t:'Performance', c:DG, a:1.30 },
+    { k:'ph', src:'ph09.jpg', t:'Reporting',   c:DG, a:0.84, cold:1 },
+    { k:'af', f:'site', d:{h:'WORK<br>INDEX',path:'/work'}, t:'Index Template', c:DG, a:1.34 },
+    { k:'mo', m:'m-scan', t:'Audience Scan', c:MO, a:0.74, lbl:'Data' },
+    { k:'mo', m:'m-ring', t:'Aperture', c:MO, a:1.00, lbl:'Loop' },
+
+    /* ---- BRANDING ---- */
+    { k:'af', f:'brand',  d:{}, t:'Mark System',   c:BR, a:1.00 },
+    { k:'af', f:'swatch', d:{}, t:'Colour System', c:BR, a:1.32 },
+    { k:'af', f:'type',   d:{}, t:'Type Specimen', c:BR, a:0.78 },
+    { k:'af', f:'grid',   d:{}, t:'Layout Grid',   c:BR, a:1.30 },
+    { k:'af', f:'type',   d:{dk:1}, t:'Inverse Set', c:BR, a:0.78 },
+    { k:'ph', src:'ph10.jpg', t:'Studio', c:BR, a:0.80 },
+    { k:'af', f:'poster', d:{h:'blue',fs:'30cqw',og:1,sub:'Advertising Agency'}, t:'Identity', c:BR, a:1.00 },
+    { k:'mo', m:'m-wedge', t:'Mark In Motion', c:MO, a:1.00, lbl:'Ident' },
+    { k:'mo', m:'m-morph', t:'Shape Shift',    c:MO, a:1.00, lbl:'Loop' },
+    { k:'mo', m:'m-orbit', t:'In Orbit',       c:MO, a:1.00, lbl:'Loop' },
+    { k:'mo', m:'m-dots',  t:'Halftone Drift', c:MO, a:1.00, lbl:'Texture' },
+    { k:'mo', m:'m-type',  t:'Blink',          c:MO, a:0.80, word:'B' }
+  ];
+
+  var ROLES=['Art direction · Identity','Strategy · Positioning','Campaign · Rollout',
+             'Creative direction','Brand system · Motion','Web build · Front end'];
+  ITEMS.forEach(function(it,i){ it.id=i; it.year=2021+(i%5); it.role=ROLES[i%ROLES.length]; });
+
+  /* ==============================================================
+     RENDER
+     ============================================================== */
+  var stage=document.getElementById('stage'), world=document.getElementById('world'),
+      filters=document.getElementById('filters'), cur=document.getElementById('cur'),
+      shade=document.getElementById('shade'), sheet=document.getElementById('sheet'),
+      zoneEl=document.getElementById('zone'), trackI=document.querySelector('#pos .track i');
+
+  function inner(it){
+    if(it.k==='ph'){
+      return '<div class="ph'+(it.cold?' cold':'')+'" style="--kb:'+(19+it.id%9)+'s">'+
+        '<img src="assets/v3/'+it.src+'" alt="'+it.t+'" loading="lazy" draggable="false">'+
+        '<span class="gr"></span></div>';
+    }
+    if(it.k==='mo'){
+      var b='';
+      if(it.m==='m-ring')       b='<i></i><i></i><i></i>';
+      else if(it.m==='m-bars')  b='<i></i><i></i><i></i><i></i><i></i>';
+      else if(it.m==='m-orbit') b='<span class="c"></span><span class="o"><b></b></span>';
+      else if(it.m==='m-wedge') b='<b></b>';
+      else if(it.m==='m-scan')  b='<span class="g"></span><span class="l"></span>';
+      else if(it.m==='m-wipe')  b='<i></i><i></i>';
+      else if(it.m==='m-morph') b='<b></b>';
+      else if(it.m==='m-mar')   b='<span>'+it.mar+it.mar+'</span>';
+      else if(it.m==='m-type')  b='<b>'+it.word+'</b>';
+      return '<div class="mo '+it.m+'">'+b+'</div>'+
+             (it.lbl?'<span class="badge">'+it.lbl+'</span>':'');
+    }
+    return AF[it.f](it.d||{});
+  }
+
+  var tiles=ITEMS.map(function(it){
+    var el=document.createElement('article');
+    el.className='tile';
+    el.innerHTML='<div class="art" style="--bob:'+(7+it.id%7)+'s">'+inner(it)+
+      '<div class="cap"><span class="t">'+it.t+'</span><span class="c">'+it.c+'</span></div></div>';
+    world.appendChild(el);
+    return { it:it, el:el, u:0, y:0, dz:0, w:0, h:0, on:true, near:false };
+  });
+
+  CATS.forEach(function(c,i){
+    var b=document.createElement('button');
+    b.className='f-btn'; b.type='button'; b.textContent=c;
+    b.setAttribute('aria-pressed', i===0?'true':'false');
+    b.addEventListener('click',function(){ setFilter(c); });
+    filters.appendChild(b);
+  });
+
+  /* ==============================================================
+     FIELD LAYOUT
+     Work is grouped into clusters with real emptiness between them, so
+     travelling has rhythm — approach, arrive, browse, move on. Even
+     spacing is exactly what made the ring feel mechanical.
+     ============================================================== */
+  var seed=11, ARC=4600, CAM=560, rowH=240, fieldLen=1000, zones=[];
+  var DEG=180/Math.PI;
+
+  function rng(s){ s=(s*2654435761)>>>0;
+    return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+
+  function layout(animate){
+    /* a shallow arc: bow enough to read as perspective, never as a tube */
+    ARC  = Math.max(3400, innerWidth*3.2);
+    rowH = Math.max(150, Math.min(innerHeight*0.30, 300));
+    CAM  = Math.max(420, Math.min(innerWidth*0.42, 640));
+
+    var vis=tiles.filter(function(t){ return t.on; });
+    if(!vis.length) return;
+    vis.forEach(function(t){ t.h=rowH; t.w=Math.round(rowH*t.it.a); });
+
+    /* cluster by discipline, in filter order */
+    var order=CATS.slice(1), groups=[];
+    order.forEach(function(cat){
+      var g=vis.filter(function(t){ return t.it.c===cat; });
+      if(g.length) groups.push({ cat:cat, list:g });
+    });
+    if(!groups.length) groups=[{cat:'All',list:vis}];
+
+    if(!animate) tiles.forEach(function(t){ t.el.classList.add('snap'); });
+
+    var r=rng(seed), u=0, GAP=Math.max(420, innerWidth*0.42), rows=innerWidth<620?2:3;
+    zones=[];
+
+    groups.forEach(function(g,gi){
+      var start=u;
+      var cols=Math.ceil(g.list.length/rows);
+      var step=0;
+      g.list.forEach(function(t){ step=Math.max(step,t.w); });
+      step*=1.02;
+      g.list.forEach(function(t,i){
+        var row=i%rows, col=Math.floor(i/rows);
+        t.u  = start + col*step + (r()-0.5)*step*0.34;
+        t.y  = (row-(rows-1)/2)*rowH*1.22 + (r()-0.5)*rowH*0.30;
+        /* depth scatter is what dissolves the shell */
+        t.dz = (r()-0.5)*560;
+        var th=(t.u/ARC)*DEG;
+        t.el.style.width=t.w+'px';
+        t.el.style.height=t.h+'px';
+        t.el.style.transform=
+          'rotateY('+th.toFixed(4)+'deg) translateZ('+(-(ARC-t.dz)).toFixed(1)+'px)'+
+          ' translateY('+t.y.toFixed(1)+'px)'+
+          ' translate('+(-t.w/2)+'px,'+(-t.h/2)+'px)';
+      });
+      u = start + Math.max(1,cols)*step;
+      zones.push({ cat:g.cat, from:start, to:u });
+      if(gi<groups.length-1) u += GAP;
+    });
+    fieldLen=u;
+    travelU=Math.max(0,Math.min(fieldLen,travelU));
+
+    if(!animate){
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        tiles.forEach(function(t){ t.el.classList.remove('snap'); });
+      }); });
+    }
+  }
+
+  function setFilter(c){
+    Array.prototype.forEach.call(filters.children,function(b){
+      b.setAttribute('aria-pressed', b.textContent===c?'true':'false'); });
+    tiles.forEach(function(t){
+      t.on=(c==='All'||t.it.c===c);
+      t.el.classList.toggle('out',!t.on);
+    });
+    seed++; travelU=0; travelC=0; layout(true);
+  }
+
+  function shuffle(){
+    seed=(seed*31+17)%100000;
+    document.body.classList.add('spinning');
+    setTimeout(function(){ document.body.classList.remove('spinning'); },640);
+    var r=rng(seed);
+    tiles.sort(function(){ return r()-0.5; });
+    layout(true);
+    vel += 420+r()*300;                 /* and the field carries on */
+    touched();
+  }
+  document.getElementById('shuffle').addEventListener('click',shuffle);
+
+  /* ==============================================================
+     TRAVEL
+     travelU is a distance ALONG the field, in world px — not an angle.
+     The field has ends; pushing past them rubber-bands rather than
+     wrapping, so the world stays a place instead of a loop.
+     ============================================================== */
+  var travelU=0, travelC=0, vel=0, lift=0, liftT=0, tilt=0, tiltT=0;
+  var drag=false,lastX=0,lastY=0,moved=0,idle=0,pressed=null;
+  var mx=-99,my=-99,cxp=0,cyp=0;
+  var DRIFT = reduce ? 0 : 0.22;
+
+  function touched(){ document.body.classList.add('touched'); }
+
+  stage.addEventListener('pointerdown',function(e){
+    drag=true; moved=0; vel=0; idle=0; lastX=e.clientX; lastY=e.clientY;
+    /* remember the tile now: once #stage captures the pointer, the later
+       click retargets to #stage and reading e.target then finds nothing */
+    pressed=e.target.closest?e.target.closest('.tile'):null;
+    stage.classList.add('dragging');
+    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+    touched();
+  });
+  stage.addEventListener('pointermove',function(e){
+    mx=e.clientX; my=e.clientY;
+    tiltT=(e.clientY/innerHeight-0.5)*-7;
+    if(!drag) return;
+    var dx=e.clientX-lastX, dy=e.clientY-lastY;
+    lastX=e.clientX; lastY=e.clientY;
+    moved+=Math.abs(dx)+Math.abs(dy);
+    travelU-=dx*1.45; vel=-dx*1.45; liftT+=dy*0.8; idle=0;
+  });
+  function endDrag(e){
+    drag=false; stage.classList.remove('dragging');
+    try{ stage.releasePointerCapture(e.pointerId); }catch(err){}
+    /* a press that barely travelled is a click — handled here so pointer
+       capture cannot swallow it, and so touch behaves the same */
+    if(pressed && moved<=8){
+      for(var i=0;i<tiles.length;i++){
+        if(tiles[i].el===pressed){ open(detail(tiles[i].it),tiles[i].it.id); break; }
+      }
+    }
+    pressed=null;
+  }
+  stage.addEventListener('pointerup',endDrag);
+  stage.addEventListener('pointercancel',endDrag);
+
+  stage.addEventListener('wheel',function(e){
+    e.preventDefault(); touched(); idle=0;
+    travelU += e.deltaY*1.15 + e.deltaX*1.0;
+    vel      = e.deltaY*0.42;
+  },{passive:false});
+
+  addEventListener('keydown',function(e){
+    var k=e.key;
+    if(k==='Escape'){ close(); return; }
+    var done=true;
+    if(k==='ArrowRight') travelU+=260;
+    else if(k==='ArrowLeft') travelU-=260;
+    else if(k==='ArrowDown') liftT-=rowH*0.5;
+    else if(k==='ArrowUp') liftT+=rowH*0.5;
+    else done=false;
+    if(done){ e.preventDefault(); touched(); idle=0; }
+  });
+
+  stage.addEventListener('pointerover',function(e){
+    if(e.target.closest('.tile')) document.body.classList.add('hovering'); });
+  stage.addEventListener('pointerout',function(e){
+    var to=e.relatedTarget;
+    if(e.target.closest('.tile') && !(to&&to.closest&&to.closest('.tile')))
+      document.body.classList.remove('hovering'); });
+
+  function frame(){
+    if(!drag){
+      travelU+=vel; vel*=0.92; idle++;
+      if(idle>110) travelU += DRIFT*Math.min(1,(idle-110)/140);
+    }
+    /* soft ends — the field stops, but it gives before it does */
+    var over=0;
+    if(travelU<0) over=travelU; else if(travelU>fieldLen) over=travelU-fieldLen;
+    if(over && !drag){ travelU-=over*0.14; vel*=0.72; }
+    else if(over){ travelU-=over*0.55; }
+
+    travelC += (travelU-travelC)*(reduce?1:0.12);
+
+    var span=rowH*1.22*(innerWidth<620?0.5:1)+rowH*0.6;
+    liftT=Math.max(-span,Math.min(span,liftT));
+    lift += (liftT-lift)*(reduce?1:0.10);
+    tilt += (tiltT-tilt)*(reduce?1:0.06);
+
+    world.style.transform =
+      'translateZ('+(ARC-CAM).toFixed(1)+'px)'+
+      ' rotateX('+tilt.toFixed(2)+'deg)'+
+      ' rotateY('+(-(travelC/ARC)*DEG).toFixed(4)+'deg)'+
+      ' translateY('+lift.toFixed(1)+'px)';
+
+    /* cull and fade by distance along the field, not by angle — with a
+       shallow arc the angle barely changes, but distance does */
+    var NEAR=innerWidth*0.95, FAR=innerWidth*1.85;
+    for(var i=0;i<tiles.length;i++){
+      var t=tiles[i];
+      if(!t.on){ t.el.style.opacity=0; continue; }
+      var d=Math.abs(t.u-travelC);
+      var o = d>FAR ? 0 : (d<NEAR ? 1 : 1-(d-NEAR)/(FAR-NEAR));
+      if(o>0) o *= 0.74 + 0.26*((t.dz+280)/560);   /* depth dims the far ones */
+      t.el.style.opacity=o.toFixed(3);
+      t.el.style.pointerEvents=(d<innerWidth*0.62 && o>0.55)?'auto':'none';
+      var near=d<innerWidth*0.85;
+      if(near!==t.near){ t.near=near; t.el.classList.toggle('live',near); }
+    }
+
+    /* where am I? */
+    if(zones.length){
+      var z=zones[0];
+      for(var q=0;q<zones.length;q++){
+        if(travelC>=zones[q].from-200 && travelC<=zones[q].to+200){ z=zones[q]; break; }
+        if(travelC>zones[q].to) z=zones[q];
+      }
+      if(zoneEl.textContent!==z.cat) zoneEl.textContent=z.cat;
+      var p=fieldLen?Math.max(0,Math.min(1,travelC/fieldLen)):0;
+      trackI.style.left=(p*124)+'px';
+    }
+
+    if(!reduce){ cxp+=(mx-cxp)*0.3; cyp+=(my-cyp)*0.3; } else { cxp=mx; cyp=my; }
+    cur.style.transform='translate3d('+cxp.toFixed(1)+'px,'+cyp.toFixed(1)+'px,0)';
+    requestAnimationFrame(frame);
+  }
+
+  /* ==============================================================
+     OVERLAY
+     ============================================================== */
+  var openId=-1;
+
+  function detail(it){
+    return '<div class="meta" style="color:rgba(15,67,127,.45);margin-bottom:16px">'+
+      it.c+' &nbsp;·&nbsp; '+it.year+'</div>'+
+      '<h1 style="font-weight:900;letter-spacing:-.03em;line-height:.92;margin:0;'+
+      'font-size:clamp(34px,6.4vw,78px)">'+it.t+'</h1>'+
+      '<div class="sheet-art live" style="margin:30px 0 26px">'+inner(it)+'</div>'+
+      '<div class="grid3">'+
+        '<div><div class="meta" style="color:rgba(15,67,127,.4);margin-bottom:8px">Discipline</div><div>'+it.c+'</div></div>'+
+        '<div><div class="meta" style="color:rgba(15,67,127,.4);margin-bottom:8px">Role</div><div>'+it.role+'</div></div>'+
+        '<div><div class="meta" style="color:rgba(15,67,127,.4);margin-bottom:8px">Year</div><div>'+it.year+'</div></div>'+
+      '</div>'+
+      '<p class="dim" style="margin:0 0 44px">Placeholder case text — replace with the real story: '+
+      'the problem, the idea, and what it changed.</p>'+
+      '<div class="foot"><button class="navbtn" data-step="-1">&larr; Previous</button>'+
+      '<button class="navbtn" data-step="1">Next &rarr;</button></div>';
+  }
+
+  var ABOUT =
+    '<div class="meta" style="color:rgba(15,67,127,.45);margin-bottom:16px">About</div>'+
+    '<h1 style="font-weight:900;letter-spacing:-.03em;line-height:.92;margin:0;'+
+    'font-size:clamp(34px,6.4vw,78px)">BLUE<br>Advertising<br>Agency</h1>'+
+    '<p class="dim" style="margin:32px 0 40px">Placeholder studio text — replace with the real '+
+    'introduction to BLUE.</p>'+
+    '<div class="grid3">'+
+      '<div><div class="meta" style="color:rgba(15,67,127,.4);margin-bottom:8px">Campaigns</div>'+
+      '<div class="dim">Concept, production, rollout across channels.</div></div>'+
+      '<div><div class="meta" style="color:rgba(15,67,127,.4);margin-bottom:8px">Social &amp; Digital</div>'+
+      '<div class="dim">Content, paid social, web build and analytics.</div></div>'+
+      '<div><div class="meta" style="color:rgba(15,67,127,.4);margin-bottom:8px">Branding</div>'+
+      '<div class="dim">Identity systems, art direction, motion.</div></div>'+
+    '</div>';
+
+  function open(html,id){
+    openId=(typeof id==='number')?id:-1;
+    sheet.innerHTML=html; shade.scrollTop=0;
+    document.body.classList.add('open');
+    document.body.classList.remove('hovering');
+  }
+  function close(){ document.body.classList.remove('open'); openId=-1; }
+
+  sheet.addEventListener('click',function(e){
+    var b=e.target.closest('[data-step]'); if(!b||openId<0) return;
+    var list=tiles.filter(function(t){ return t.on; }).map(function(t){ return t.it; });
+    var at=-1; list.forEach(function(p,i){ if(p.id===openId) at=i; });
+    if(at<0) return;
+    var nx=list[(at+(+b.dataset.step)+list.length)%list.length];
+    open(detail(nx),nx.id);
+  });
+  document.getElementById('about-btn').addEventListener('click',function(){ open(ABOUT); });
+  document.getElementById('close').addEventListener('click',close);
+
+  var rt;
+  addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(function(){ layout(false); },140); });
+
+  function start(){ layout(false); requestAnimationFrame(frame); }
+  if(document.fonts&&document.fonts.load){
+    document.fonts.load('900 1em Poppins').then(start,start);
+    setTimeout(start,800);
+  } else addEventListener('load',start);
+})();
+</script>
+
+</body>
+</html>

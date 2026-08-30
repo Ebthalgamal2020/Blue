@@ -1,0 +1,1939 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLUE Advertising Agency — See The Bigger Picture</title>
+<link rel="icon" href="blue-logo.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;900&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { navy: '#0F437F', orange: '#F9AF1A' },
+        fontFamily: { sans: ['Poppins', 'system-ui', 'sans-serif'] }
+      }
+    }
+  }
+</script>
+
+<style>
+  :root{
+    --navy:#0F437F;
+    --orange:#F9AF1A;
+    /* Display size for the word PICTURE. Seeded in vw, then measured and
+       overwritten in px by fitType() so the word fills the width with an
+       equal margin either side. */
+    --pic:20vw;
+    /* Lead-line sizes, as ratios of --pic. Overridden when short. */
+    --r-see:.145;
+    --r-big:.36;
+    /* Long, slow settle. Fast departure, unhurried arrival. */
+    --settle:cubic-bezier(.16,1,.3,1);
+  }
+
+  html,body{ background:#fff; overflow-x:hidden; }
+  body{
+    font-family:'Poppins',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .hero{ height:100vh; height:100svh; }
+
+  /* ---------------------------------------------------------------
+     LOGO CROP
+     blue-logo.jpg is 1500x1500 with the wordmark floating in a large
+     white margin. Ink occupies 969x510 at (264,494). The numbers below
+     scale the image so its ink region exactly fills the wrapper, then
+     shift it so the ink's top-left lands at 0,0.
+       width : 1500/969 = 154.799%
+       left  : -264/969 = -27.245%
+       top   : -494/969 = -50.980%
+     Wrapper aspect-ratio 969/510 = 1.9.
+
+     Offsets use MARGIN, not top/left. Percentage margins resolve
+     against the containing block's width on every side - including
+     margin-top - so both numbers share the same /969 denominator.
+     (top/left percentages do not: `top` resolves against HEIGHT,
+     which silently halves the vertical shift and crops the tagline.)
+     --------------------------------------------------------------- */
+  .logo-crop{ position:relative; overflow:hidden; aspect-ratio:969/510; }
+  .logo-crop img{
+    display:block; max-width:none;
+    width:154.799%;         /*  1500/969 */
+    margin-left:-27.245%;   /*  -264/969 */
+    margin-top:-50.980%;    /*  -494/969 */
+  }
+
+  /* ---------------------------------------------------------------
+     DISPLAY TYPE
+     Every line is sized as a ratio of --pic, so the escalation
+     SEE THE -> BIGGER -> PICTURE holds identically at any width.
+     Lines are centered blocks (not flex) so the oversized word
+     overflows symmetrically instead of clipping on one side.
+     --------------------------------------------------------------- */
+  .d-line{
+    display:block; width:100%; text-align:center; white-space:nowrap;
+    font-weight:900; line-height:.85; color:var(--navy);
+  }
+  /* Shrink-wraps the glyphs so the fitter can measure the WORD rather
+     than the full-width line box it sits in. */
+  .fit{ display:inline-block; }
+  /* Ratios sum to 1.505. At 16:9 that puts the stack at ~58% of the
+     viewport height, leaving room for the sub-line and the scroll
+     indicator. Larger ratios (the first pass used .26/.62) push the
+     stack to 73% and the sub-line collides with the indicator.
+
+     On a short viewport (a 1366x768 laptop leaves ~630px) the LEAD
+     lines shrink, not the whole stack, so PICTURE keeps its full
+     width-driven size and the height comes out of SEE THE and BIGGER. */
+  .d-see{ font-size:calc(var(--pic) * var(--r-see)); letter-spacing:.055em; }
+  .d-big{ font-size:calc(var(--pic) * var(--r-big)); letter-spacing:-.02em; }
+  /* left-aligned so the JS ink offset measures from a known origin;
+     the other two lines stay centred. */
+  .d-pic{ font-size:var(--pic); letter-spacing:-.035em; text-align:left; }
+  @media (max-height:780px){ :root{ --r-see:.11; --r-big:.27; } }
+
+  /* ---------------------------------------------------------------
+     ORANGE SHAPES — exactly three, all quoted from the logo's wedge.
+     All sit behind the type so navy never muddies.
+     --------------------------------------------------------------- */
+  .disc{
+    width:clamp(120px,26vmin,320px); aspect-ratio:1;
+    background:var(--orange); border-radius:50%;
+  }
+  .o-ring{
+    width:clamp(160px,36vmin,440px); aspect-ratio:1;
+    border:2px solid var(--orange); border-radius:50%;
+  }
+  .wedge{
+    width:clamp(46px,10vmin,120px); aspect-ratio:1;
+    background:var(--orange); border-radius:100% 0 0 0;
+  }
+
+  /* ---------------------------------------------------------------
+     INTRO — the pull-back.
+     Outer wrappers carry parallax translate (set by JS); inner
+     elements carry these transforms. Separated so the two never
+     overwrite each other.
+     --------------------------------------------------------------- */
+  /* Start scale is 3.4, not higher: past ~4x the viewport falls
+     entirely inside one navy letter stroke and the first frames read
+     as a flat near-black fill rather than an abstract form. At 3.4x
+     a stroke edge and a counter stay in frame, so the shape is
+     unreadable but clearly a shape. Opacity leads in over .35s so the
+     abstraction is actually seen before the settle takes over. */
+  .type-in{ opacity:0; transform:scale(3.4); filter:blur(3px); will-change:transform,opacity,filter; }
+  body.ready .type-in{
+    opacity:1; transform:scale(1); filter:blur(0);
+    transition:opacity .35s ease-out,
+               transform 1.3s var(--settle),
+               filter 1.1s var(--settle);
+  }
+
+  .shape-in{ opacity:0; will-change:transform,opacity; }
+  body.ready .shape-in{
+    opacity:1; transform:none;
+    transition:opacity .8s ease-out, transform 1s var(--settle);
+  }
+  .disc-in { transform:scale(.2); transition-delay:.55s !important; }
+  .o-ring-in { transform:scale(.5); transition-delay:.7s  !important; }
+  .wedge-in{ transform:rotate(-90deg) scale(.4); transition-delay:.85s !important; }
+  body.ready .wedge-in{ transform:rotate(-12deg); }
+
+  .chrome{ opacity:0; transform:translateY(12px); }
+  body.ready .chrome{
+    opacity:1; transform:translateY(0);
+    transition:opacity .8s ease-out, transform .8s var(--settle);
+  }
+  .c-logo  { transition-delay:1.25s !important; }
+  .c-sub   { transition-delay:1.4s  !important; }
+  .c-scroll{ transition-delay:1.7s  !important; }
+
+  /* balance stops the last word orphaning onto its own line on narrow
+     screens; the tighter tracking keeps it to two even lines.
+
+     margin-top IS the breathing room above this line - measured, the
+     gap between PICTURE's line box and this element is exactly this
+     margin and nothing else, so shrinking the display type would not
+     have moved it. Declared here rather than as Tailwind mt-* classes
+     so the short-viewport rule below can win on source order alone. */
+  .c-sub{
+    font-size:clamp(10px,1.1vw,13px); letter-spacing:.3em; text-wrap:balance;
+    margin-top:56px;
+  }
+  @media (min-width:768px){ .c-sub{ margin-top:72px; } }
+  /* Short screens keep the original 40px - the taller gap would push
+     the stack back into the scroll indicator. */
+  @media (max-height:780px){ .c-sub{ margin-top:40px; } }
+  @media (max-width:480px){ .c-sub{ letter-spacing:.2em; } }
+
+  /* ---------------------------------------------------------------
+     SCROLL INDICATOR — a focus track, not an arrow.
+     --------------------------------------------------------------- */
+  .track{ position:relative; width:1px; height:64px; background:rgba(15,67,127,.14); overflow:hidden; }
+  .track span{
+    position:absolute; inset:0 auto auto 0; width:1px; height:26px;
+    background:var(--orange);
+    animation:track 2.2s cubic-bezier(.6,0,.4,1) infinite;
+  }
+  @keyframes track{
+    0%   { transform:translateY(-40%);  opacity:0; }
+    18%  { opacity:1; }
+    82%  { opacity:1; }
+    100% { transform:translateY(246%);  opacity:0; }
+  }
+
+  /* Blur is applied in local space then magnified by the 3.4x scale,
+     so it is costly on phones. Soften the cost, keep the effect. */
+  @media (max-width:768px){
+    .type-in{ filter:blur(2px); }
+    .track{ height:52px; }
+    .track span{ height:22px; }
+  }
+
+  /* ---------------------------------------------------------------
+     REDUCED MOTION — the pull-back collapses to a plain fade.
+     --------------------------------------------------------------- */
+  @media (prefers-reduced-motion:reduce){
+    .type-in, .shape-in, .chrome{
+      transform:none !important; filter:none !important;
+    }
+    body.ready .type-in,
+    body.ready .shape-in,
+    body.ready .chrome{
+      opacity:1; transform:none !important;
+      transition:opacity .4s linear !important;
+      transition-delay:0s !important;
+    }
+    .track span{ animation:none; opacity:1; transform:translateY(76%); }
+  }
+
+  /* ===============================================================
+     V1 — SITE SYSTEM  (everything below the hero)
+
+     No new vocabulary is introduced. Every section is built from the
+     three moves the hero already makes:
+       1. display type at a scale that crops rather than fits,
+       2. hairline rules the exact colour of the scroll track,
+       3. the orange geometry quoted from the logo's wedge.
+     The hero's --settle curve and its staggered arrival are reused
+     verbatim, so the whole page keeps one hand.
+     =============================================================== */
+
+  :root{
+    --rule:rgba(15,67,127,.14);    /* identical to .track's ground */
+    --rule-2:rgba(15,67,127,.08);
+    --wash:rgba(15,67,127,.035);
+    /* Page gutter. Tuned to land on the hero header's own padding at
+       every breakpoint (24 / 40 / 56) so the nav logo does not shift
+       sideways as you scroll past the hero. */
+    --gut:clamp(24px,5.2vw,56px);
+    --nav-h:72px;
+  }
+
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion:reduce){ html{ scroll-behavior:auto; } }
+
+  .wrap{ width:100%; max-width:1600px; margin-inline:auto; padding-inline:var(--gut); }
+  section[id]{ scroll-margin-top:calc(var(--nav-h) + 8px); }
+
+  /* ---------------------------------------------------------------
+     REVEAL
+     The class that HIDES content is added by script (.anim on <html>),
+     never in the stylesheet. With JS off, or the observer unsupported,
+     the page is simply a static, fully visible document.
+     --------------------------------------------------------------- */
+  .anim [data-reveal]{ opacity:0; transform:translateY(26px); will-change:transform,opacity; }
+  .anim [data-reveal].in{
+    opacity:1; transform:none;
+    transition:opacity .8s ease-out var(--d,0s),
+               transform 1.1s var(--settle) var(--d,0s);
+  }
+  /* Line-clip reveal — display type rises out of its own line box.
+     Same family as the hero's pull-back: the words arrive, they do
+     not fade in. Reserved for the two big statements. */
+  .clip{ display:block; overflow:hidden; padding-bottom:.06em; }
+  .clip > span{ display:block; }
+  .anim .clip > span{ transform:translateY(105%); }
+  .anim .in .clip > span{
+    transform:none;
+    transition:transform 1.1s var(--settle) var(--d,0s);
+  }
+  /* Hairline that draws itself left to right when its section lands. */
+  .anim .draw{ transform:scaleX(0); transform-origin:0 50%; }
+  .anim .in .draw{
+    transform:scaleX(1);
+    transition:transform 1.2s var(--settle) var(--d,0s);
+  }
+
+  /* A reveal host: it is observed (so its children can key off .in)
+     but it does not move itself. */
+  .anim [data-reveal].bare{ opacity:1; transform:none; }
+
+  @media (prefers-reduced-motion:reduce){
+    .anim [data-reveal], .anim .clip > span, .anim .draw{
+      opacity:1 !important; transform:none !important;
+      transition:opacity .4s linear !important;
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     SECTION FURNITURE
+     --------------------------------------------------------------- */
+  .sec{ position:relative; padding-block:clamp(80px,12vh,152px); }
+  .sec-tint{ background:var(--wash); }
+
+  /* The numbered eyebrow. The orange dash in front is a third
+     quotation of the logo's wedge — a straight one. */
+  .eyebrow{
+    display:flex; align-items:center; gap:14px;
+    font-size:clamp(9px,.85vw,11px); font-weight:500; letter-spacing:.3em;
+    text-transform:uppercase; color:rgba(15,67,127,.5);
+  }
+  .eyebrow::before{
+    content:''; flex:none; width:clamp(22px,3.4vw,48px); height:1px;
+    background:var(--orange);
+  }
+  .on-navy .eyebrow{ color:rgba(255,255,255,.55); }
+
+  /* Section display heading. Deliberately one notch below the hero —
+     PICTURE owns the largest type on the page and nothing competes. */
+  .h-dis{
+    font-weight:900; letter-spacing:-.03em; line-height:.92; color:var(--navy);
+    font-size:clamp(38px,6.4vw,104px);
+  }
+  .h-mid{
+    font-weight:900; letter-spacing:-.025em; line-height:1;
+    font-size:clamp(26px,3.4vw,54px); color:var(--navy);
+  }
+  .lede{ font-size:clamp(15px,1.15vw,19px); line-height:1.62; color:rgba(15,67,127,.72); }
+  .body-s{ font-size:clamp(13px,.95vw,15px); line-height:1.7; color:rgba(15,67,127,.62); }
+  .on-navy .lede{ color:rgba(255,255,255,.72); }
+  .on-navy .body-s{ color:rgba(255,255,255,.6); }
+  .meta{
+    font-size:clamp(9px,.8vw,11px); font-weight:500; letter-spacing:.24em;
+    text-transform:uppercase;
+  }
+  .hl{ color:var(--orange); }
+  .rule{ height:1px; background:var(--rule); width:100%; }
+
+  /* ---------------------------------------------------------------
+     NAV — absent over the hero, then it exists.
+     Hidden by transform (not display) so the blur layer composites
+     once and the arrival is a slide, not a repaint.
+     --------------------------------------------------------------- */
+  .nav{
+    position:fixed; top:0; left:0; right:0; z-index:60; height:var(--nav-h);
+    display:flex; align-items:center;
+    background:rgba(255,255,255,.86);
+    -webkit-backdrop-filter:saturate(1.6) blur(14px);
+            backdrop-filter:saturate(1.6) blur(14px);
+    border-bottom:1px solid var(--rule-2);
+    transform:translateY(-101%);
+    transition:transform .6s var(--settle);
+  }
+  .nav.show{ transform:none; }
+  .nav .wrap{ display:flex; align-items:center; justify-content:space-between; gap:24px; }
+  .nav-links{ display:none; align-items:center; gap:clamp(18px,2.4vw,38px); }
+  @media (min-width:960px){ .nav-links{ display:flex; } }
+  .nav-link{
+    position:relative; font-size:12px; font-weight:500; letter-spacing:.16em;
+    text-transform:uppercase; color:rgba(15,67,127,.66); padding-block:6px;
+    transition:color .3s;
+  }
+  .nav-link::after{
+    content:''; position:absolute; left:0; right:0; bottom:0; height:1px;
+    background:var(--orange); transform:scaleX(0); transform-origin:100% 50%;
+    transition:transform .45s var(--settle);
+  }
+  .nav-link:hover{ color:var(--navy); }
+  .nav-link:hover::after, .nav-link.active::after{ transform:scaleX(1); transform-origin:0 50%; }
+  .nav-link.active{ color:var(--navy); }
+
+  /* The only filled element on the page, so it never has to compete
+     for the orange. */
+  .btn{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:11px 20px; border-radius:999px;
+    background:var(--orange); color:var(--navy);
+    font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
+    white-space:nowrap;
+    transition:transform .4s var(--settle), box-shadow .4s ease, background .3s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 10px 26px -12px rgba(249,175,26,.9); }
+  .btn .ar{ display:inline-block; transition:transform .4s var(--settle); }
+  .btn:hover .ar{ transform:translateX(4px); }
+  .btn-ghost{ background:transparent; color:var(--navy); border:1px solid var(--rule); }
+  .btn-ghost:hover{ border-color:var(--orange); box-shadow:none; }
+  .on-navy .btn-ghost{ color:#fff; border-color:rgba(255,255,255,.28); }
+  .on-navy .btn-ghost:hover{ border-color:var(--orange); }
+
+  /* Scroll progress — the hero's focus track, unrolled and laid flat
+     along the bottom edge of the nav. */
+  .prog{
+    position:absolute; left:0; bottom:-1px; height:1px; width:100%;
+    background:var(--orange); transform:scaleX(0); transform-origin:0 50%;
+  }
+
+  /* Mobile menu ---------------------------------------------------- */
+  .burger{ display:flex; flex-direction:column; gap:5px; padding:10px; margin-right:-10px; position:relative; z-index:70; }
+  @media (min-width:960px){ .burger{ display:none; } }
+  .burger i{ display:block; width:22px; height:1.5px; background:var(--navy); transition:transform .45s var(--settle), opacity .3s, background .3s; }
+  body.menu .burger i{ background:#fff; }
+  body.menu .burger i:nth-child(1){ transform:translateY(6.5px) rotate(45deg); }
+  body.menu .burger i:nth-child(2){ opacity:0; }
+  body.menu .burger i:nth-child(3){ transform:translateY(-6.5px) rotate(-45deg); }
+  /* z-index 55 — BELOW .nav (60). The burger lives inside .nav, which
+     is its own stacking context, so a higher z-index on the button
+     cannot lift it above a sheet that outranks its parent: the close
+     control would be buried under the menu it closes. */
+  .sheet{
+    position:fixed; inset:0; z-index:55; background:var(--navy);
+    display:flex; flex-direction:column; justify-content:center; gap:4px;
+    padding:var(--gut); opacity:0; pointer-events:none;
+    transition:opacity .5s var(--settle);
+  }
+  body.menu .sheet{ opacity:1; pointer-events:auto; }
+  body.menu .nav{
+    transform:none; background:transparent; border-color:transparent;
+    -webkit-backdrop-filter:none; backdrop-filter:none;
+  }
+  body.menu .nav .logo-crop{ opacity:0; pointer-events:none; }
+  .nav .logo-crop{ transition:opacity .3s ease; }
+  body.menu .prog{ opacity:0; }
+  .sheet a{
+    color:#fff; font-weight:900; letter-spacing:-.02em; line-height:1.16;
+    font-size:clamp(30px,8vw,56px);
+    transform:translateY(18px); opacity:0;
+    transition:transform .7s var(--settle), opacity .5s ease, color .3s;
+  }
+  .sheet a:hover, .sheet a.hl{ color:var(--orange); }
+  body.menu .sheet a{ transform:none; opacity:1; }
+
+  /* ---------------------------------------------------------------
+     01 MANIFESTO
+     --------------------------------------------------------------- */
+  .stmt{
+    font-weight:900; letter-spacing:-.028em; line-height:1.04; color:var(--navy);
+    font-size:clamp(29px,4.4vw,72px);
+  }
+  /* The hero's ring, three times the size and mostly off the right
+     edge — the same shape, seen closer. */
+  /* Centred with a negative margin, NOT translateY: the hero's
+     parallax loop writes `transform` on every [data-depth] element and
+     would overwrite the centring on the first mouse move. */
+  .ring-xl{
+    position:absolute; top:50%; right:-14vw; width:min(56vw,760px); aspect-ratio:1;
+    margin-top:calc(min(56vw,760px) / -2);
+    border:1px solid var(--orange); border-radius:50%;
+    opacity:.45; pointer-events:none;
+  }
+
+  /* ---------------------------------------------------------------
+     05 PROOF
+     --------------------------------------------------------------- */
+  .quote{
+    font-weight:900; letter-spacing:-.02em; line-height:1.14; color:var(--navy);
+    font-size:clamp(23px,3.2vw,48px); text-wrap:balance;
+  }
+  .quote-mark{
+    font-size:clamp(60px,9vw,140px); line-height:.62; color:var(--orange);
+    font-weight:900; display:block; margin-bottom:6px;
+  }
+  /* ---------------------------------------------------------------
+     06 CONTACT — the one inverted block, so the page finally lands
+     on the logo's own colour.
+     --------------------------------------------------------------- */
+  .on-navy{ background:var(--navy); color:#fff; }
+  .on-navy .h-dis, .on-navy .h-mid, .on-navy .stmt{ color:#fff; }
+  .on-navy .rule{ background:rgba(255,255,255,.18); }
+  .disc-xl{
+    position:absolute; right:-12vw; top:-10vw; width:min(48vw,600px); aspect-ratio:1;
+    background:var(--orange); border-radius:50%; opacity:.13; pointer-events:none;
+  }
+  .mail{
+    display:inline-block; position:relative;
+    font-weight:900; letter-spacing:-.02em; color:#fff;
+    font-size:clamp(19px,2.4vw,38px);
+  }
+  .mail::after{
+    content:''; position:absolute; left:0; right:0; bottom:-.08em; height:2px;
+    background:var(--orange); transform-origin:100% 50%;
+    transition:transform .5s var(--settle);
+  }
+  .mail:hover::after{ transform:scaleX(0); }
+
+  .field{ position:relative; margin-bottom:24px; }
+  .field label{
+    display:block; font-size:10px; font-weight:500; letter-spacing:.24em;
+    text-transform:uppercase; color:rgba(255,255,255,.45); margin-bottom:9px;
+  }
+  .field input, .field textarea{
+    width:100%; background:transparent; border:0; color:#fff;
+    border-bottom:1px solid rgba(255,255,255,.22);
+    padding:6px 0 11px; font-family:inherit; font-size:15px; line-height:1.5;
+    border-radius:0; transition:border-color .4s;
+  }
+  .field textarea{ resize:vertical; min-height:80px; }
+  .field input:focus, .field textarea:focus{ outline:none; border-bottom-color:var(--orange); }
+  .field input::placeholder, .field textarea::placeholder{ color:rgba(255,255,255,.28); }
+  .form-note{ font-size:11px; line-height:1.6; color:rgba(255,255,255,.4); }
+
+  /* ---------------------------------------------------------------
+     FOOTER
+     --------------------------------------------------------------- */
+  .foot-link{
+    display:block; padding-block:7px; color:rgba(15,67,127,.6); font-size:14px;
+    transition:color .3s, transform .4s var(--settle);
+  }
+  .foot-link:hover{ color:var(--navy); transform:translateX(4px); }
+  .foot-head{
+    font-size:10px; font-weight:500; letter-spacing:.26em; text-transform:uppercase;
+    color:rgba(15,67,127,.35); margin-bottom:12px;
+  }
+  /* Back to top — the hero's focus track, running the other way. */
+  .totop{ display:inline-flex; align-items:center; gap:12px; color:rgba(15,67,127,.55); transition:color .3s; }
+  .totop:hover{ color:var(--navy); }
+  .totop .t{ position:relative; width:1px; height:34px; background:var(--rule); overflow:hidden; }
+  .totop .t::after{
+    content:''; position:absolute; left:0; width:1px; height:14px; background:var(--orange);
+    animation:uptrack 2.2s cubic-bezier(.6,0,.4,1) infinite;
+  }
+  @keyframes uptrack{
+    0%{ transform:translateY(160%); opacity:0 }  18%{ opacity:1 }
+    82%{ opacity:1 } 100%{ transform:translateY(-110%); opacity:0 }
+  }
+  @media (prefers-reduced-motion:reduce){ .totop .t::after{ animation:none; opacity:1; } }
+
+
+  /* ===============================================================
+     V1 — SECOND PASS
+     Three sections were rebuilt because they had settled into their
+     default shapes (a list, a photo grid, a row of cards). Each one
+     now quotes something the hero already does:
+
+       SERVICES — fill vs outline. The hero states it with a solid
+                  disc and a hollow ring; the list says it with type.
+       WORK     — the idea, resized. Campaign artwork drawn in the
+                  brand's own language and shown on the surfaces
+                  advertising actually lives on.
+       PROCESS  — the pull-back itself. Four frames of one photograph,
+                  each one further out, until you can see what you
+                  were looking at.
+     =============================================================== */
+
+  /* ---------------------------------------------------------------
+     02 — SERVICES : a type specimen that reacts
+     --------------------------------------------------------------- */
+  .spec{ display:grid; gap:clamp(34px,4vw,60px); grid-template-columns:1fr; }
+  @media (min-width:1000px){
+    .spec{ grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:clamp(40px,5vw,90px); }
+  }
+
+  .spec-side{ position:relative; }
+  @media (min-width:1000px){
+    .spec-side{ position:sticky; top:calc(var(--nav-h) + 48px); align-self:start; }
+  }
+
+  /* The numeral is hollow — it belongs to the ring, not the disc. */
+  .spec-num{
+    position:relative; overflow:hidden;
+    height:clamp(88px,13vw,196px);
+    font-weight:900; letter-spacing:-.05em; line-height:.9;
+    font-size:clamp(104px,15vw,232px);
+  }
+  .spec-num span{
+    position:absolute; left:0; top:0; display:block;
+    color:transparent; -webkit-text-stroke:2px var(--orange);
+    transform:translateY(104%);
+    transition:transform .75s var(--settle), opacity .4s ease;
+    opacity:0;
+  }
+  .spec-num span.on{ transform:none; opacity:1; }
+  .spec-num span.out{ transform:translateY(-104%); opacity:0; }
+
+  .spec-desc{ position:relative; margin-top:clamp(18px,2vw,30px); min-height:9.5em; }
+  @media (min-width:1000px){ .spec-desc{ min-height:8em; } }
+  .spec-desc p{
+    position:absolute; left:0; top:0; right:0; max-width:40ch;
+    opacity:0; transform:translateY(12px);
+    transition:opacity .4s ease, transform .6s var(--settle);
+  }
+  .spec-desc p.on{ opacity:1; transform:none; }
+
+  .spec-ticks{ display:flex; gap:8px; margin-top:clamp(20px,2.4vw,34px); }
+  .spec-ticks i{
+    display:block; width:26px; height:2px; background:var(--rule);
+    transition:background .45s ease, width .5s var(--settle);
+  }
+  .spec-ticks i.on{ background:var(--orange); width:44px; }
+
+  .spec-list{ display:block; }
+  .spec-item{
+    display:block; width:100%; text-align:left; cursor:pointer;
+    padding-block:clamp(2px,.5vw,8px);
+  }
+  .spec-name{
+    display:block;
+    font-weight:900; letter-spacing:-.035em; line-height:1.04;
+    font-size:clamp(29px,4.35vw,69px);
+    color:transparent; -webkit-text-stroke:1.5px rgba(15,67,127,.4);
+    transition:color .5s var(--settle), -webkit-text-stroke-color .5s ease,
+               transform .6s var(--settle);
+  }
+  .spec-item.on .spec-name{ color:var(--navy); -webkit-text-stroke-color:var(--navy); }
+  @media (min-width:1000px){
+    .spec-item.on .spec-name{ transform:translateX(clamp(6px,1vw,18px)); }
+  }
+  /* Where the stroke is unavailable the specimen degrades to weight
+     and tone, which is the same idea more quietly. */
+  @supports not (-webkit-text-stroke:1px #000){
+    .spec-name{ color:rgba(15,67,127,.28); }
+    .spec-item.on .spec-name{ color:var(--navy); }
+    .spec-num span{ color:var(--orange); }
+  }
+
+  /* ---------------------------------------------------------------
+     03 — WORK : the artefacts, not a gallery
+     Every surface is drawn, not photographed. `container-type` lets
+     one piece of artwork size itself correctly inside a billboard, a
+     phone and a browser without three sets of numbers.
+     --------------------------------------------------------------- */
+  .case:first-of-type{ margin-top:clamp(56px,7vw,100px); }
+  .case + .case{ margin-top:clamp(76px,11vw,168px); }
+  .case-grid{ display:grid; gap:clamp(30px,4vw,64px); grid-template-columns:1fr; align-items:center; }
+  @media (min-width:900px){
+    .case-grid{ grid-template-columns:minmax(0,4fr) minmax(0,7fr); }
+    .case:nth-of-type(even) .case-txt{ order:2; }
+  }
+  .case-title{
+    font-weight:900; letter-spacing:-.03em; line-height:.98;
+    font-size:clamp(30px,3.9vw,64px); color:var(--navy); margin-top:14px;
+  }
+  .case-res{
+    margin-top:20px; padding-top:18px; border-top:1px solid var(--rule);
+    max-width:34ch;
+  }
+
+  .stage{ position:relative; }
+
+  .situ{
+    position:absolute; z-index:4; overflow:hidden; background:var(--navy);
+    box-shadow:0 24px 54px -30px rgba(15,67,127,.65);
+  }
+  .situ img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    filter:grayscale(1) brightness(1.14); mix-blend-mode:luminosity; opacity:.72;
+    transition:opacity .7s var(--settle), filter .7s ease;
+  }
+  .case:hover .situ img{ mix-blend-mode:normal; opacity:1; filter:none; }
+  .situ figcaption{
+    position:absolute; left:0; bottom:0; z-index:2;
+    padding:6px 9px; background:var(--orange); color:var(--navy);
+    font-size:9px; font-weight:900; letter-spacing:.16em;
+  }
+  .lay-ooh .situ{ right:-2%; bottom:-19%; width:26%; aspect-ratio:4/3; transform:rotate(3deg); }
+  .lay-web .situ{ left:-3%; bottom:-19%; width:23%; aspect-ratio:1;   transform:rotate(-4deg); }
+  /* Overlap is a wide-screen luxury. Below this the billboard is only
+     about 110px tall and the phone lands straight on top of the word,
+     so the objects stop overlapping and simply queue up instead. */
+  @media (max-width:760px){
+    .situ{ display:none; }
+    .lay-ooh .phone-wrap, .lay-web .phone-wrap{
+      position:static; width:36%; max-width:132px; margin:16px 0 0 auto;
+      transform:rotate(-3deg);
+    }
+    .lay-web .phone-wrap{ margin-inline:0 auto; transform:rotate(3deg); }
+    .lay-social{ grid-template-columns:minmax(0,38fr) minmax(0,58fr); gap:5%; }
+  }
+
+  /* Artwork ------------------------------------------------------- */
+  .art{
+    position:absolute; inset:0; overflow:hidden;
+    container-type:inline-size;
+    display:grid; place-items:center;
+  }
+  .art-navy  { background:var(--navy);   color:#fff; }
+  .art-orange{ background:var(--orange); color:var(--navy); }
+  .art-paper { background:#fff;          color:var(--navy); }
+  .art-w{
+    position:relative; z-index:2;
+    font-weight:900; letter-spacing:-.045em; line-height:.84; text-align:center;
+    font-size:24cqi; white-space:nowrap;
+  }
+  .art-tall .art-w{ font-size:30cqi; white-space:normal; }
+  .art-disc{
+    position:absolute; z-index:1; border-radius:50%;
+    width:52cqi; aspect-ratio:1; background:currentColor; opacity:.16;
+    right:-10cqi; top:-14cqi;
+  }
+  .art-ring{
+    position:absolute; z-index:1; border-radius:50%;
+    width:64cqi; aspect-ratio:1; border:1cqi solid currentColor; opacity:.22;
+    left:-16cqi; bottom:-24cqi;
+  }
+  .art-bar{
+    position:absolute; z-index:1; left:0; bottom:0; height:6cqi; width:100%;
+    background:var(--orange);
+  }
+
+  /* Billboard ----------------------------------------------------- */
+  .board-face{
+    position:relative; aspect-ratio:16/6; overflow:hidden;
+    box-shadow:0 24px 60px -34px rgba(15,67,127,.55);
+  }
+  .board-legs{ display:flex; justify-content:space-between; padding-inline:14%; }
+  .board-legs i{ display:block; width:2px; height:clamp(24px,3.4vw,54px); background:rgba(15,67,127,.22); }
+  .board-legs i:last-child{ transform:skewX(-2deg); }
+
+  /* Phone --------------------------------------------------------- */
+  .phone{
+    position:relative; width:100%; aspect-ratio:9/18.5;
+    border-radius:clamp(14px,2.2vw,26px); padding:5px;
+    background:var(--navy);
+    box-shadow:0 26px 60px -30px rgba(15,67,127,.6);
+  }
+  .phone-face{ position:relative; height:100%; border-radius:clamp(10px,1.7vw,20px); overflow:hidden; background:#fff; }
+  .phone::after{
+    content:''; position:absolute; top:9px; left:50%; transform:translateX(-50%);
+    width:26%; height:5px; border-radius:99px; background:rgba(255,255,255,.5);
+    z-index:3;
+  }
+  /* the 3-up feed grid */
+  .feed{ position:absolute; inset:0; display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr; }
+  .feed > div{ position:relative; overflow:hidden; container-type:inline-size; }
+  .cell-img{ background:var(--navy); }
+  .cell-img img, .tile-img img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    filter:grayscale(1) brightness(1.12); mix-blend-mode:luminosity; opacity:.8;
+  }
+  .tile-img{ background:var(--navy); }
+  .feed .art-w{ font-size:30cqi; }
+
+  /* Browser ------------------------------------------------------- */
+  .browser{
+    position:relative; border:1px solid var(--rule); background:#fff;
+    box-shadow:0 26px 64px -34px rgba(15,67,127,.5);
+  }
+  .browser-bar{
+    display:flex; align-items:center; gap:6px;
+    padding:10px clamp(10px,1.2vw,16px); border-bottom:1px solid var(--rule);
+  }
+  .browser-bar i{ width:7px; height:7px; border-radius:50%; background:rgba(15,67,127,.2); }
+  .browser-bar span{
+    margin-left:10px; flex:1; height:8px; border-radius:99px;
+    background:rgba(15,67,127,.07);
+  }
+  .browser-face{ position:relative; aspect-ratio:16/10; overflow:hidden; }
+
+  /* Composition — the surfaces overlap and sit slightly off-square,
+     so the group reads as objects on a desk rather than a diagram. */
+  .lay-ooh .phone-wrap{
+    position:absolute; left:4%; bottom:-14%; width:15%; min-width:78px;
+    transform:rotate(-5deg); z-index:3;
+  }
+  .lay-social{
+    display:grid; grid-template-columns:minmax(0,33fr) minmax(0,63fr);
+    gap:4%; align-items:center;
+  }
+  .lay-social .phone-wrap{ transform:rotate(-3.5deg); z-index:3; }
+  .posts{ display:grid; grid-template-columns:1fr 1fr; gap:5%; transform:rotate(2deg); }
+  .posts .tile{
+    position:relative; aspect-ratio:1; container-type:inline-size;
+    box-shadow:0 18px 44px -30px rgba(15,67,127,.55);
+  }
+  .posts .tile .art-w{ font-size:32cqi; }
+  .lay-web .phone-wrap{
+    position:absolute; right:-2%; bottom:-16%; width:17%; min-width:82px;
+    transform:rotate(4deg); z-index:3;
+  }
+
+  /* ---------------------------------------------------------------
+     04 — PROCESS : the pull-back, four frames of it
+     One photograph, four crops, each further out than the last. The
+     first frame is unreadable on purpose — that is what LOOK means
+     here, and it is the same move the hero opens with.
+     --------------------------------------------------------------- */
+  .zoom{ display:grid; gap:clamp(14px,1.6vw,24px); grid-template-columns:repeat(2,1fr); }
+  @media (min-width:960px){ .zoom{ grid-template-columns:repeat(4,1fr); } }
+
+  .zoom-step{ position:relative; }
+  .zoom-frame{
+    position:relative; aspect-ratio:4/5; overflow:hidden;
+    background:var(--navy); border:1px solid var(--rule);
+  }
+  .zoom-frame img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    filter:grayscale(1) brightness(1.2) contrast(1.02);
+    mix-blend-mode:luminosity; opacity:.78;
+    transform-origin:62% 30%;      /* the lit billboard, in every crop */
+    will-change:transform;
+  }
+  .z1 img{ transform:scale(9);   filter:grayscale(1) brightness(1.25) blur(2px); }
+  .z2 img{ transform:scale(4);   filter:grayscale(1) brightness(1.22) blur(.6px); }
+  .z3 img{ transform:scale(1.9); }
+  .z4 img{ transform:scale(1); }
+  /* Each frame eases out of an even tighter crop as it arrives, so the
+     sequence is a movement, not four static pictures. */
+  .anim .zoom-step img{ transform:scale(var(--z-from)); }
+  .anim .zoom-step.in img{
+    transform:scale(var(--z-to));
+    transition:transform 1.6s var(--settle) var(--d,0s);
+  }
+  .z1{ --z-from:13; --z-to:9; }
+  .z2{ --z-from:5.6; --z-to:4; }
+  .z3{ --z-from:2.5; --z-to:1.9; }
+  .z4{ --z-from:1.3; --z-to:1; }
+
+  .zoom-no{
+    position:absolute; z-index:2; top:0; left:0;
+    padding:8px 12px; background:var(--orange); color:var(--navy);
+    font-size:10px; font-weight:900; letter-spacing:.18em;
+  }
+  .zoom-name{
+    margin-top:16px; font-weight:900; letter-spacing:.02em;
+    font-size:clamp(16px,1.5vw,22px); color:var(--navy);
+  }
+  .zoom-note{
+    margin-top:clamp(30px,4vw,54px); text-align:center;
+    text-wrap:balance;
+  }
+
+  /* ---------------------------------------------------------------
+     05 — PROOF : the wall, in outline
+     Eight empty boxes replaced with one moving line. Hollow type
+     again, so the names read as marks rather than as claims.
+     --------------------------------------------------------------- */
+  .mq{
+    position:relative; overflow:hidden; width:100%;
+    padding-block:clamp(20px,2.4vw,36px);
+    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  }
+  .mq-track{ display:flex; width:max-content; animation:mq 46s linear infinite; }
+  .mq:hover .mq-track{ animation-play-state:paused; }
+  .mq-track > span{
+    display:block; padding-inline:clamp(18px,2.4vw,40px);
+    font-weight:900; letter-spacing:-.02em; line-height:1.1;
+    font-size:clamp(26px,4.4vw,68px);
+    color:transparent; -webkit-text-stroke:1.5px rgba(15,67,127,.34);
+    white-space:nowrap;
+  }
+  .mq-track > span.dot{ -webkit-text-stroke:0; color:var(--orange); }
+  @supports not (-webkit-text-stroke:1px #000){
+    .mq-track > span{ color:rgba(15,67,127,.24); }
+  }
+  @keyframes mq{ from{ transform:none } to{ transform:translateX(-50%) } }
+  /* Edges dissolve rather than cut, so the line has no beginning. */
+  .mq::before, .mq::after{
+    content:''; position:absolute; top:0; bottom:0; width:clamp(40px,8vw,130px); z-index:2;
+    pointer-events:none;
+  }
+  .mq::before{ left:0;  background:linear-gradient(90deg,#fff,rgba(255,255,255,0)); }
+  .mq::after { right:0; background:linear-gradient(270deg,#fff,rgba(255,255,255,0)); }
+
+  @media (prefers-reduced-motion:reduce){
+    .mq-track{ animation:none; }
+    .anim .zoom-step img, .anim .zoom-step.in img{ transition:none !important; }
+    .anim .z1 img{ transform:scale(9) } .anim .z2 img{ transform:scale(4) }
+    .anim .z3 img{ transform:scale(1.9) } .anim .z4 img{ transform:scale(1) }
+    .spec-num span, .spec-desc p{ transition:none !important; }
+  }
+
+</style>
+
+<!-- The hidden state for scroll reveals is switched on here, in the head,
+     so it exists before the first paint. If this script never runs the
+     page is a plain, fully visible document. -->
+<script>document.documentElement.classList.add('anim');</script>
+</head>
+
+<body class="bg-white text-navy">
+
+<!-- ============================================================
+     NAV — does not exist over the hero. The hero owns its own
+     header; this only slides in once that header has scrolled away,
+     so the opening frame stays exactly as approved.
+     ============================================================ -->
+<nav class="nav" id="nav" aria-label="Primary">
+  <div class="wrap">
+    <a href="#top" class="logo-crop block" style="width:clamp(92px,9vw,118px)" aria-label="BLUE — back to top">
+      <img src="blue-logo.jpg" alt="BLUE Advertising Agency">
+    </a>
+
+    <div class="nav-links">
+      <a class="nav-link" href="#why">Why Blue</a>
+      <a class="nav-link" href="#services">What We Do</a>
+      <a class="nav-link" href="#work">Work</a>
+      <a class="nav-link" href="#process">Process</a>
+      <a class="btn" href="#contact">Start a project <span class="ar">&rarr;</span></a>
+    </div>
+
+    <button class="burger" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="sheet">
+      <i></i><i></i><i></i>
+    </button>
+  </div>
+  <span class="prog" id="prog" aria-hidden="true"></span>
+</nav>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">
+  <a href="#why">Why Blue</a>
+  <a href="#services">What We Do</a>
+  <a href="#work">Work</a>
+  <a href="#process">Process</a>
+  <a href="#proof">Proof</a>
+  <a href="#contact" class="hl">Start a project</a>
+</div>
+
+<main>
+
+<section id="top" class="hero relative w-full overflow-hidden bg-white">
+
+  <!-- ORANGE SHAPES (behind everything) ------------------------- -->
+  <div class="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+
+    <!-- disc — upper right -->
+    <div class="absolute" style="top:15%; right:9%;" data-depth="24">
+      <div class="disc shape-in disc-in"></div>
+    </div>
+
+    <!-- ring — lower left -->
+    <div class="absolute" style="bottom:11%; left:5%;" data-depth="16">
+      <div class="o-ring shape-in o-ring-in"></div>
+    </div>
+
+    <!-- quarter-wedge — upper left, moves against the cursor -->
+    <div class="absolute" style="top:26%; left:13%;" data-depth="30" data-invert="1">
+      <div class="wedge shape-in wedge-in"></div>
+    </div>
+
+  </div>
+
+  <!-- HEADER ---------------------------------------------------- -->
+  <header class="absolute top-0 left-0 z-20 p-6 md:p-10 lg:p-14">
+    <div data-depth="3">
+      <a href="#top" class="chrome c-logo block logo-crop" style="width:clamp(112px,13vw,168px)"
+         aria-label="BLUE Advertising Agency — home">
+        <img src="blue-logo.jpg" alt="BLUE Advertising Agency">
+      </a>
+    </div>
+  </header>
+
+  <!-- TYPE LOCKUP ----------------------------------------------- -->
+  <!-- pb-20 reserves the scroll indicator's band: the stack centres in
+       the remaining height instead of centring on the whole hero and
+       running into it on short screens. -->
+  <div class="absolute inset-0 z-10 flex flex-col items-center justify-center px-0 pb-20">
+
+    <div data-depth="6" class="w-full">
+      <h1 id="typeGroup" class="type-in w-full m-0">
+        <span class="d-line d-see"><span class="fit">SEE THE</span></span>
+        <span class="d-line d-big"><span class="fit">BIGGER</span></span>
+        <span class="d-line d-pic" id="picLine"><span class="fit" id="pic">PICTURE</span></span>
+      </h1>
+    </div>
+
+    <!-- Placeholder sub-line — replace with real positioning copy. -->
+    <p class="chrome c-sub px-6 text-center font-medium uppercase text-navy/60">
+      Brand strategy &nbsp;·&nbsp; Campaigns &nbsp;·&nbsp; Creative direction
+    </p>
+
+  </div>
+
+  <!-- SCROLL INDICATOR ------------------------------------------ -->
+  <!-- Centred with left-0/right-0 + items-center, NOT left-1/2 with
+       -translate-x-1/2: .chrome animates `transform`, which would
+       overwrite Tailwind's translate and shove this off-centre by half
+       its own width. -->
+  <a href="#why" aria-label="Scroll to Why Blue"
+     class="chrome c-scroll absolute z-20 bottom-7 md:bottom-9 left-0 right-0 flex flex-col items-center gap-4">
+    <div class="track"><span></span></div>
+    <span class="font-medium uppercase text-navy/50 whitespace-nowrap"
+          style="font-size:clamp(9px,.85vw,11px); letter-spacing:.3em;">Keep Looking</span>
+  </a>
+
+</section>
+
+<!-- ==============================================================
+     01 — WHY BLUE
+     The hero says "see the bigger picture". This is the section that
+     has to earn it, so it is the only place besides the hero where
+     type is allowed to get very large.
+     ============================================================== -->
+<section id="why" class="sec overflow-hidden">
+  <div class="ring-xl" data-depth="10" aria-hidden="true"></div>
+
+  <div class="wrap relative">
+    <div data-reveal class="eyebrow">01 &nbsp;/&nbsp; Why Blue</div>
+
+    <h2 data-reveal class="bare stmt mt-10 md:mt-14" style="max-width:19ch">
+      <span class="clip"><span>Most agencies are</span></span>
+      <span class="clip" style="--d:.08s"><span>handed a fragment</span></span>
+      <span class="clip" style="--d:.16s"><span>and asked to make</span></span>
+      <span class="clip" style="--d:.24s"><span>it shine. We ask</span></span>
+      <span class="clip" style="--d:.32s"><span>what the fragment</span></span>
+      <span class="clip" style="--d:.4s"><span>is <span class="hl">part of</span>.</span></span>
+    </h2>
+
+    <div data-reveal style="--d:.15s" class="mt-14 md:mt-24 grid gap-x-16 gap-y-9 md:grid-cols-2">
+      <p class="lede" style="max-width:46ch">
+        BLUE was built on a refusal: no brief is only about the brief. A launch is
+        a culture question. A rebrand is an internal one. A media plan is arithmetic
+        with people on the end of it.
+      </p>
+      <p class="body-s" style="max-width:52ch">
+        So we work at the width of the whole problem — strategy, story, craft and
+        spend in one room, answerable to a single idea. It takes longer to start
+        and considerably less time to finish, because nothing has to be rescued
+        in the handover. There isn't one.
+      </p>
+    </div>
+
+    <div data-reveal style="--d:.25s" class="mt-14 md:mt-20">
+      <div class="rule draw"></div>
+      <div class="mt-7 flex flex-wrap items-center gap-x-10 gap-y-4">
+        <a href="#services" class="btn btn-ghost">What we do <span class="ar">&rarr;</span></a>
+        <p class="meta" style="color:rgba(15,67,127,.4)">Independent &nbsp;·&nbsp; Full service &nbsp;·&nbsp; One room</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==============================================================
+     02 — WHAT WE DO
+     Built as an index rather than a card grid: six hairlines, and
+     the detail unfolds only for the one you are looking at.
+     ============================================================== -->
+<section id="services" class="sec">
+  <div class="wrap">
+    <div class="flex flex-wrap items-end justify-between gap-8">
+      <div data-reveal>
+        <div class="eyebrow">02 &nbsp;/&nbsp; What We Do</div>
+        <h2 class="h-dis mt-8">SIX WAYS<br>TO BE SEEN</h2>
+      </div>
+      <p data-reveal style="--d:.12s" class="body-s pb-3" id="svc-hint">
+        Six disciplines. One of them is filled in.
+      </p>
+    </div>
+
+    <div class="spec mt-14 md:mt-24">
+
+      <div class="spec-side" data-reveal>
+        <div class="spec-num" id="spec-num" aria-hidden="true">
+          <span class="on">01</span><span>02</span><span>03</span>
+          <span>04</span><span>05</span><span>06</span>
+        </div>
+
+        <div class="spec-desc" id="spec-desc">
+          <p class="lede on" id="sp-0" role="tabpanel" aria-labelledby="st-0">
+            Positioning, architecture, naming, and the arguments that hold them up.
+            We look for the true thing you can own — then make it defensible enough
+            to survive a change of marketing director.
+          </p>
+          <p class="lede" id="sp-1" role="tabpanel" aria-labelledby="st-1" hidden>
+            One idea, sized for every place it has to live — a six-second pre-roll,
+            a shop window, the side of a building. If it only works in the deck,
+            it isn't the idea yet.
+          </p>
+          <p class="lede" id="sp-2" role="tabpanel" aria-labelledby="st-2" hidden>
+            Art direction, design systems, tone of voice, and the standards that
+            keep them intact across a hundred touchpoints. The part where taste
+            stops being a matter of opinion.
+          </p>
+          <p class="lede" id="sp-3" role="tabpanel" aria-labelledby="st-3" hidden>
+            Film, stills, motion and sound, made in-house at the volume the feed
+            actually eats — without letting the craft drop to meet the calendar.
+          </p>
+          <p class="lede" id="sp-4" role="tabpanel" aria-labelledby="st-4" hidden>
+            Planning, buying, and the honest reporting afterwards. Paid, owned and
+            earned budgeted as one number, because the audience never knew they
+            were separate.
+          </p>
+          <p class="lede" id="sp-5" role="tabpanel" aria-labelledby="st-5" hidden>
+            Sites, stores and products, built to carry the brand rather than
+            apologise for it — fast, accessible, and still recognisably yours.
+          </p>
+        </div>
+
+        <div class="spec-ticks" id="spec-ticks" aria-hidden="true">
+          <i class="on"></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </div>
+
+      <!-- The list is a specimen: everything you are not looking at is
+           drawn as an outline, and the one you are stands filled in.
+           Same statement the hero makes with a solid disc and a hollow
+           ring, made out of type instead of shapes. -->
+      <div class="spec-list" role="tablist" aria-label="Disciplines" aria-orientation="vertical" data-reveal style="--d:.1s">
+        <button class="spec-item on" type="button" role="tab" id="st-0" aria-controls="sp-0" aria-selected="true"  tabindex="0"><span class="spec-name">Brand Strategy</span></button>
+        <button class="spec-item"    type="button" role="tab" id="st-1" aria-controls="sp-1" aria-selected="false" tabindex="-1"><span class="spec-name">Campaign Ideas</span></button>
+        <button class="spec-item"    type="button" role="tab" id="st-2" aria-controls="sp-2" aria-selected="false" tabindex="-1"><span class="spec-name">Creative Direction</span></button>
+        <button class="spec-item"    type="button" role="tab" id="st-3" aria-controls="sp-3" aria-selected="false" tabindex="-1"><span class="spec-name">Content Production</span></button>
+        <button class="spec-item"    type="button" role="tab" id="st-4" aria-controls="sp-4" aria-selected="false" tabindex="-1"><span class="spec-name">Media &amp; Performance</span></button>
+        <button class="spec-item"    type="button" role="tab" id="st-5" aria-controls="sp-5" aria-selected="false" tabindex="-1"><span class="spec-name">Digital Experience</span></button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ==============================================================
+     03 — SELECTED WORK
+     The only photography on the page, and it arrives duotoned into
+     navy so the palette never breaks. Colour is the reward for
+     hovering — the picture resolves, exactly as the hero does.
+
+     PLACEHOLDER: titles, sectors and years are written to show the
+     layout. Swap in real case studies and credit the client.
+     ============================================================== -->
+<section id="work" class="sec">
+  <div class="wrap">
+    <div class="flex flex-wrap items-end justify-between gap-8">
+      <div data-reveal>
+        <div class="eyebrow">03 &nbsp;/&nbsp; Selected Work</div>
+        <h2 class="h-dis mt-8">ONE IDEA,<br>EVERY SURFACE</h2>
+      </div>
+      <p data-reveal style="--d:.12s" class="body-s pb-3" >
+        Shown where it ran, not cropped into a grid.
+      </p>
+    </div>
+
+    <!-- PLACEHOLDER WORK.
+         The artwork on every surface below is drawn, not photographed:
+         these are BLUE's own shapes and type standing in for campaign
+         creative. Swap each `.art` block for the real campaign image
+         (an <img> filling the surface) when the case studies exist —
+         the billboard, phone and browser frames stay as they are. -->
+
+    <article class="case" data-reveal>
+      <div class="case-grid">
+        <div class="case-txt">
+          <p class="meta" style="color:rgba(15,67,127,.45)">01 &nbsp;·&nbsp; Out of Home &nbsp;·&nbsp; 2025</p>
+          <h3 class="case-title">Look Up</h3>
+          <p class="body-s case-res">
+            Nine sites and one sentence. Nothing to read twice at fifty
+            miles an hour, and a cut-down that still worked at arm's length.
+          </p>
+        </div>
+
+        <div class="stage lay-ooh">
+          <div class="board">
+            <div class="board-face">
+              <div class="art art-navy">
+                <span class="art-w">LOOK UP</span>
+                <i class="art-disc"></i>
+              </div>
+            </div>
+            <div class="board-legs"><i></i><i></i></div>
+          </div>
+          <figure class="situ">
+            <img src="assets/v3/ph05.jpg" alt="A run of campaign posters along a brick wall" loading="lazy" decoding="async">
+            <figcaption>In situ</figcaption>
+          </figure>
+          <div class="phone-wrap">
+            <div class="phone"><div class="phone-face">
+              <div class="art art-orange art-tall">
+                <span class="art-w">LOOK<br>UP</span>
+                <i class="art-ring"></i>
+              </div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="case" data-reveal>
+      <div class="case-grid">
+        <div class="case-txt">
+          <p class="meta" style="color:rgba(15,67,127,.45)">02 &nbsp;·&nbsp; Social &amp; Content &nbsp;·&nbsp; 2025</p>
+          <h3 class="case-title">All In</h3>
+          <p class="body-s case-res">
+            Ninety cut-downs out of one shoot week, built for the thumb
+            rather than squeezed into it.
+          </p>
+        </div>
+
+        <div class="stage lay-social">
+          <div class="phone-wrap">
+            <div class="phone"><div class="phone-face">
+              <div class="feed">
+                <div><div class="art art-orange"><span class="art-w">A</span></div></div>
+                <div class="cell-img"><img src="assets/v3/ph06.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async"></div>
+                <div><div class="art art-paper"><span class="art-w">L</span></div></div>
+                <div><div class="art art-navy"><span class="art-w">L</span></div></div>
+                <div class="cell-img"><img src="assets/v3/ph01.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async"></div>
+                <div><div class="art art-orange"><span class="art-w">I</span></div></div>
+                <div><div class="art art-paper"><span class="art-w">N</span></div></div>
+                <div><div class="art art-orange"><i class="art-disc" style="right:-6cqi;top:-6cqi;opacity:.22"></i></div></div>
+                <div><div class="art art-navy"><span class="art-w">•</span></div></div>
+              </div>
+            </div></div>
+          </div>
+          <div class="posts">
+            <div class="tile"><div class="art art-paper"><span class="art-w">ALL</span><i class="art-ring"></i></div></div>
+            <div class="tile tile-img"><img src="assets/v3/ph02.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async"></div>
+            <div class="tile"><div class="art art-orange"><i class="art-ring" style="left:-18cqi;bottom:-22cqi;opacity:.28"></i></div></div>
+            <div class="tile"><div class="art art-navy"><span class="art-w">IN</span><i class="art-disc"></i></div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="case" data-reveal>
+      <div class="case-grid">
+        <div class="case-txt">
+          <p class="meta" style="color:rgba(15,67,127,.45)">03 &nbsp;·&nbsp; Web &amp; Digital &nbsp;·&nbsp; 2024</p>
+          <h3 class="case-title">Open</h3>
+          <p class="body-s case-res">
+            A site that loads before it explains itself, and a checkout
+            that stopped losing people on the third field.
+          </p>
+        </div>
+
+        <div class="stage lay-web">
+          <div class="browser">
+            <div class="browser-bar"><i></i><i></i><i></i><span></span></div>
+            <div class="browser-face">
+              <div class="art art-paper">
+                <span class="art-w">OPEN</span>
+                <i class="art-disc" style="opacity:.14"></i>
+                <i class="art-bar"></i>
+              </div>
+            </div>
+          </div>
+          <figure class="situ">
+            <img src="assets/v3/ph07.jpg" alt="Source code on a dark editor screen" loading="lazy" decoding="async">
+            <figcaption>Build</figcaption>
+          </figure>
+          <div class="phone-wrap">
+            <div class="phone"><div class="phone-face">
+              <div class="art art-navy art-tall">
+                <span class="art-w">OPEN</span>
+                <i class="art-bar"></i>
+              </div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <div class="mt-16 md:mt-24 flex flex-wrap items-center gap-x-10 gap-y-4" data-reveal>
+      <a href="#" class="btn btn-ghost">The whole archive <span class="ar">&rarr;</span></a>
+      <p class="meta" style="color:rgba(15,67,127,.4)">Twenty-one more projects</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ==============================================================
+     04 — HOW WE THINK
+     Four beats, and the first is LOOK — the same instruction the
+     hero's scroll indicator gives.
+     ============================================================== -->
+<section id="process" class="sec sec-tint">
+  <div class="wrap">
+    <div class="flex flex-wrap items-end justify-between gap-8">
+      <div data-reveal>
+        <div class="eyebrow">04 &nbsp;/&nbsp; How We Think</div>
+        <h2 class="h-dis mt-8">LOOK. FRAME.<br>MAKE. MEASURE.</h2>
+      </div>
+      <p data-reveal style="--d:.12s" class="lede pb-2">
+        Four moves, in that order,<br class="hidden md:block"> every single time.
+      </p>
+    </div>
+
+    <!-- One photograph, four crops, each one further out than the last.
+         The first frame is unreadable on purpose: that is what LOOK
+         means here, and it is the move the hero opens with.
+         PLACEHOLDER IMAGE — see the credit note in the footer. -->
+    <div class="zoom mt-14 md:mt-24">
+
+      <div class="zoom-step z1" data-reveal>
+        <div class="zoom-frame">
+          <span class="zoom-no">01</span>
+          <img src="assets/v3/ph03.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+        </div>
+        <h3 class="zoom-name">LOOK</h3>
+        <p class="body-s mt-3">
+          The first weeks are spent refusing to solve anything. Category,
+          culture, competitors, and the customer's actual Tuesday. At this
+          range nothing is legible yet, and pretending otherwise is how
+          briefs go wrong.
+        </p>
+      </div>
+
+      <div class="zoom-step z2" data-reveal style="--d:.1s">
+        <div class="zoom-frame">
+          <span class="zoom-no">02</span>
+          <img src="assets/v3/ph03.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+        </div>
+        <h3 class="zoom-name">FRAME</h3>
+        <p class="body-s mt-3">
+          Pull back until one sentence holds everything in shot. If the
+          strategy needs a deck to survive the lift, it isn't a strategy
+          yet — it's a mood.
+        </p>
+      </div>
+
+      <div class="zoom-step z3" data-reveal style="--d:.2s">
+        <div class="zoom-frame">
+          <span class="zoom-no">03</span>
+          <img src="assets/v3/ph03.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async">
+        </div>
+        <h3 class="zoom-name">MAKE</h3>
+        <p class="body-s mt-3">
+          Ideas are cheap until they are built. Design, film and media are
+          made alongside each other, so nothing thins out on the way to
+          production.
+        </p>
+      </div>
+
+      <div class="zoom-step z4" data-reveal style="--d:.3s">
+        <div class="zoom-frame">
+          <span class="zoom-no">04</span>
+          <img src="assets/v3/ph03.jpg" alt="A city street at dusk, lit billboards above the traffic" loading="lazy" decoding="async">
+        </div>
+        <h3 class="zoom-name">MEASURE</h3>
+        <p class="body-s mt-3">
+          We agree the numbers before the work runs, and we show you the
+          ones that didn't move. Only from here can you see what you were
+          looking at.
+        </p>
+      </div>
+
+    </div>
+
+    <p class="zoom-note meta" style="color:rgba(15,67,127,.4)" data-reveal >
+      Same photograph, four times &nbsp;·&nbsp; the only thing that changed is how far back we stood
+    </p>
+  </div>
+</section>
+
+
+<!-- ==============================================================
+     05 — PROOF
+     PLACEHOLDER: the quote, its attribution and the eight client
+     cells are slots. Replace cells with <img> marks when you have
+     permission to show them.
+     ============================================================== -->
+<section id="proof" class="sec">
+  <div class="wrap">
+    <div class="grid gap-x-20 gap-y-12 lg:grid-cols-12">
+
+      <div class="lg:col-span-7" data-reveal>
+        <div class="eyebrow">05 &nbsp;/&nbsp; Proof</div>
+        <span class="quote-mark mt-10 block" aria-hidden="true">&ldquo;</span>
+        <blockquote class="quote" style="max-width:20ch">
+          They came back with a different question than the one we asked — and it
+          turned out to be the right one.
+        </blockquote>
+        <figcaption class="meta mt-10" style="color:rgba(15,67,127,.45)">
+          <!-- REPLACE: real name, role, company -->
+          Client name &nbsp;·&nbsp; Marketing Director
+        </figcaption>
+      </div>
+
+      <div class="lg:col-span-5 lg:pt-2" data-reveal style="--d:.12s">
+        <p class="body-s" style="max-width:44ch">
+          The reason to hire an agency that starts wider is that the answer is
+          rarely where the brief was pointing. Every name below arrived as a
+          different conversation.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- REPLACE the names with real clients. Hollow type, so the wall reads
+       as marks rather than as claims. The run is printed twice and the
+       animation travels exactly one copy — that is what makes it seamless. -->
+  <div class="mq mt-14 md:mt-20" aria-label="Selected clients" data-reveal>
+    <div class="mq-track"><span>Client One</span><span class="dot">&bull;</span><span>Client Two</span><span class="dot">&bull;</span><span>Client Three</span><span class="dot">&bull;</span><span>Client Four</span><span class="dot">&bull;</span><span>Client Five</span><span class="dot">&bull;</span><span>Client Six</span><span class="dot">&bull;</span><span>Client Seven</span><span class="dot">&bull;</span><span>Client Eight</span><span class="dot">&bull;</span><span>Client One</span><span class="dot">&bull;</span><span>Client Two</span><span class="dot">&bull;</span><span>Client Three</span><span class="dot">&bull;</span><span>Client Four</span><span class="dot">&bull;</span><span>Client Five</span><span class="dot">&bull;</span><span>Client Six</span><span class="dot">&bull;</span><span>Client Seven</span><span class="dot">&bull;</span><span>Client Eight</span><span class="dot">&bull;</span></div>
+  </div>
+</section>
+
+
+<!-- ==============================================================
+     06 — CONTACT
+     The single inverted block. NB the class is .on-navy, not .invert:
+     Tailwind ships an `invert` filter utility and it would win. The page has been white for six
+     screens; it lands on the logo's own navy, with the hero's disc
+     bled off the corner.
+
+     The form has no back end by design — submitting composes a
+     mail draft in the visitor's own client. Point `action` at a
+     real endpoint (Formspree, Basin, your CRM) to change that.
+     ============================================================== -->
+<section id="contact" class="sec on-navy overflow-hidden">
+  <div class="disc-xl" data-depth="18" aria-hidden="true"></div>
+
+  <div class="wrap relative">
+    <div class="grid gap-x-20 gap-y-16 lg:grid-cols-12">
+
+      <div class="lg:col-span-6" data-reveal>
+        <div class="eyebrow">06 &nbsp;/&nbsp; Contact</div>
+        <h2 class="bare h-dis mt-10" data-reveal>
+          <span class="clip"><span>LET'S SEE IT</span></span>
+          <span class="clip" style="--d:.1s"><span>TOGETHER.</span></span>
+        </h2>
+        <p class="lede mt-9" style="max-width:38ch">
+          Tell us the problem in its widest form. Even if you only want a piece of
+          it solved, we would rather see the whole thing first.
+        </p>
+
+        <div class="mt-12">
+          <!-- REPLACE: real address -->
+          <a class="mail" href="mailto:hello@blue.agency">hello@blue.agency</a>
+        </div>
+
+        <div class="mt-12 grid gap-8 sm:grid-cols-2" style="max-width:520px">
+          <div>
+            <div class="meta" style="color:rgba(255,255,255,.4)">Studio</div>
+            <p class="body-s mt-3">
+              <!-- REPLACE: real address -->
+              Street address<br>City, Country
+            </p>
+          </div>
+          <div>
+            <div class="meta" style="color:rgba(255,255,255,.4)">New business</div>
+            <p class="body-s mt-3">
+              <!-- REPLACE: real number -->
+              +00 000 000 000<br>Mon–Fri, 9–6
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 lg:col-start-8" data-reveal style="--d:.12s">
+        <form id="brief" novalidate>
+          <div class="field">
+            <label for="f-name">Your name</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" placeholder="Jane Okafor" required>
+          </div>
+          <div class="field">
+            <label for="f-email">Email</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" placeholder="jane@company.com" required>
+          </div>
+          <div class="field">
+            <label for="f-co">Company</label>
+            <input id="f-co" name="company" type="text" autocomplete="organization" placeholder="Company name">
+          </div>
+          <div class="field">
+            <label for="f-msg">What are you trying to do?</label>
+            <textarea id="f-msg" name="message" rows="3" placeholder="A sentence is enough to start." required></textarea>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-6">
+            <button type="submit" class="btn">Send it over <span class="ar">&rarr;</span></button>
+            <p class="form-note" id="brief-note" role="status" style="max-width:24ch">
+              Opens a draft in your mail app.
+            </p>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+</main>
+
+<!-- ==============================================================
+     FOOTER
+     ============================================================== -->
+<footer class="pt-16 pb-10 md:pt-24 md:pb-12">
+  <div class="wrap">
+    <div class="rule"></div>
+
+    <div class="mt-12 grid gap-x-16 gap-y-12 md:grid-cols-12">
+
+      <div class="md:col-span-5">
+        <a href="#top" class="logo-crop block" style="width:clamp(120px,13vw,164px)" aria-label="BLUE — back to top">
+          <img src="blue-logo.jpg" alt="BLUE Advertising Agency">
+        </a>
+        <p class="body-s mt-7" style="max-width:34ch">
+          An independent advertising agency working at the width of the whole
+          problem.
+        </p>
+      </div>
+
+      <div class="md:col-span-2">
+        <div class="foot-head">Studio</div>
+        <a class="foot-link" href="#why">Why Blue</a>
+        <a class="foot-link" href="#process">Process</a>
+        <a class="foot-link" href="#proof">Proof</a>
+        <a class="foot-link" href="#">Careers</a>
+      </div>
+
+      <div class="md:col-span-2">
+        <div class="foot-head">Work</div>
+        <a class="foot-link" href="#work">Selected work</a>
+        <a class="foot-link" href="#services">Capabilities</a>
+        <a class="foot-link" href="#contact">Start a project</a>
+      </div>
+
+      <div class="md:col-span-3">
+        <div class="foot-head">Follow</div>
+        <a class="foot-link" href="#">Instagram</a>
+        <a class="foot-link" href="#">LinkedIn</a>
+        <a class="foot-link" href="#">Behance</a>
+      </div>
+
+    </div>
+
+    <div class="mt-16 flex flex-col-reverse gap-8 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="meta" style="color:rgba(15,67,127,.35)">
+          &copy; <span id="yr">2026</span> BLUE Advertising Agency &nbsp;·&nbsp; All rights reserved
+        </p>
+        <!-- Required attribution for the placeholder photography. Delete
+             this line when the real case-study images go in. -->
+        <p class="body-s mt-4" style="font-size:11px;color:rgba(15,67,127,.35);max-width:60ch">
+          Placeholder photography: uriba, Swami Stream, youkneeon,
+          Asbestos Bill, Giuseppe Milo (CC BY) and markus spiske (CC0).
+          Replace with real case-study images.
+        </p>
+      </div>
+
+      <a href="#top" class="totop">
+        <span class="t"></span>
+        <span class="meta">Back to the top</span>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var pic = document.getElementById('pic');          // inline-block: glyph width
+  var picLine = document.getElementById('picLine');  // the full-width line box
+  var group = document.getElementById('typeGroup');
+  var root = document.documentElement;
+
+  /* ------------------------------------------------------------
+     FIT — size PICTURE so it spans 104% of the viewport, i.e. it
+     bleeds past both edges. font-size -> width is linear, so a
+     single measured pass is exact. This is what makes "the picture
+     doesn't fit the frame" hold at 360px and at 2560px alike.
+     ------------------------------------------------------------ */
+  /* White space either side of PICTURE, as a fraction of viewport
+     width. The word sits FULLY on screen - no bleed - with equal
+     margins, so both the P and the E read complete. */
+  var GUTTER     = 0.022;  // per side
+  var GUTTER_MIN = 14;     // px floor, so narrow screens keep a real margin
+  var LS    = -0.035;  // MUST match .d-pic letter-spacing
+  var CHARS = 7;       // "PICTURE"
+
+  /* True glyph bounds, as ratios of font-size.
+
+     The CSS box is not the ink. It opens before the P by that glyph's
+     left side bearing, and because letter-spacing is applied after the
+     FINAL glyph as well, it closes 0.035em short of where the E's ink
+     actually ends. Centring the box therefore leaves a gutter on the
+     left and clips only the right - measured at 19px clear on the left
+     against 191 rows flush to the right edge. Canvas reports the real
+     ink box, so centre on that instead. */
+  function inkMetrics() {
+    var c = document.createElement('canvas').getContext('2d');
+    var F = 200;
+    c.font = '900 ' + F + 'px Poppins, sans-serif';
+    var m = c.measureText('PICTURE');
+    if (!m || typeof m.actualBoundingBoxRight !== 'number') return null;
+    return {
+      left:  -m.actualBoundingBoxLeft / F,                    // P's left bearing
+      right:  m.actualBoundingBoxRight / F + (CHARS - 1) * LS // E's ink, tracked in
+    };
+  }
+
+  function fitType() {
+    var vw = root.clientWidth;                       // layout viewport, no scrollbar
+    var ink = inkMetrics();
+    var size;
+
+    var gut = Math.max(GUTTER_MIN, vw * GUTTER);
+
+    if (ink) {
+      /* Solve for the ink spanning vw minus a gutter each side. */
+      size = (vw - 2 * gut) / (ink.right - ink.left);
+    } else {
+      /* No ink metrics: fall back to box width. offsetWidth is a LAYOUT
+         measurement and ignores CSS transforms - getBoundingClientRect()
+         does not, and during the intro the group is still at scale(3.4). */
+      root.style.setProperty('--pic', '20vw');
+      var w = pic.offsetWidth;
+      if (!w) return;
+      size = parseFloat(getComputedStyle(pic).fontSize) * ((vw - 2 * gut) / w);
+    }
+    root.style.setProperty('--pic', size + 'px');
+
+    /* Last resort only. The --r-see/--r-big breakpoint above absorbs
+       ordinary short laptops with the bleed intact; this catches the
+       extremes (landscape phones) where even that is not enough, and
+       trades bleed for a layout that does not overlap. */
+    var maxH = root.clientHeight * 0.72;
+    var h = group.offsetHeight;
+    if (h > maxH) {
+      size = size * maxH / h;
+      root.style.setProperty('--pic', size + 'px');
+    }
+
+    /* Centre the INK, not the box. Derived from the FINAL size, so the
+       left and right margins stay equal even if the height guard above
+       shrank the type. */
+    if (ink) {
+      var inkW = (ink.right - ink.left) * size;
+      pic.style.marginLeft = ((vw - inkW) / 2 - ink.left * size) + 'px';
+    } else {
+      pic.style.marginLeft = '';
+    }
+
+    /* Pull back from the centre of PICTURE, not the centre of the
+       block - that word is what resolves out of the abstraction.
+       offsetTop/offsetHeight for the same transform-free reason. */
+    var gh = group.offsetHeight;
+    if (gh) {
+      group.style.transformOrigin = '50% ' +
+        ((picLine.offsetTop + picLine.offsetHeight / 2 - group.offsetTop) / gh * 100) + '%';
+    }
+  }
+
+  var started = false;
+  function start() {
+    if (started) return;               // fonts.ready and the timer both call this
+    started = true;
+    fitType();
+    requestAnimationFrame(function () { document.body.classList.add('ready'); });
+  }
+
+  if (document.fonts && document.fonts.load) {
+    /* Gate on the display weight alone. fonts.ready waits for EVERY
+       requested face, which holds the blank opening frame longer than
+       it needs to - 900 is the only one the fit depends on.
+       Whichever lands first wins; if the timer opens on fallback
+       metrics, the re-fit corrects the bleed once Poppins arrives. */
+    document.fonts.load('900 1em Poppins').then(start, start);
+    document.fonts.ready.then(function () { start(); fitType(); });
+    setTimeout(start, 600);
+  } else {
+    window.addEventListener('load', start);
+  }
+
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(fitType, 120);
+  });
+
+  /* ------------------------------------------------------------
+     PARALLAX — damped, depth-ordered.
+     Each frame eases toward the cursor rather than snapping to it.
+     That inertia is the whole difference between "premium" and
+     "a div following the mouse".
+     ------------------------------------------------------------ */
+  if (reduced) return;
+
+  var layers = [].slice.call(document.querySelectorAll('[data-depth]'));
+  var tx = 0, ty = 0, cx = 0, cy = 0, drift = 0, live = false;
+  var fine = window.matchMedia('(pointer: fine)').matches;
+
+  if (fine) {
+    window.addEventListener('mousemove', function (e) {
+      tx = (e.clientX / window.innerWidth - .5) * 2;
+      ty = (e.clientY / window.innerHeight - .5) * 2;
+    });
+  }
+
+  function frame() {
+    /* No cursor on touch: a slow figure-eight drift so the screen
+       is never simply dead. */
+    if (!fine) {
+      drift += 0.004;
+      tx = Math.sin(drift);
+      ty = Math.cos(drift * 0.7);
+    }
+    cx += (tx - cx) * 0.06;
+    cy += (ty - cy) * 0.06;
+
+    for (var i = 0; i < layers.length; i++) {
+      var el = layers[i];
+      var d = parseFloat(el.dataset.depth);
+      var s = el.dataset.invert ? -1 : 1;
+      el.style.transform =
+        'translate3d(' + (cx * d * s).toFixed(2) + 'px,' + (cy * d * s).toFixed(2) + 'px,0)';
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* Hold off until the intro has settled so the cursor never fights it. */
+  setTimeout(function () { if (!live) { live = true; frame(); } }, 1800);
+})();
+</script>
+
+<script>
+/* =================================================================
+   V1 — SITE BEHAVIOUR
+   Deliberately a second, separate IIFE. The hero's script owns the
+   fit, the intro and the cursor parallax and is not touched here;
+   this one owns everything that only exists because the page now
+   scrolls. The two share nothing but the DOM.
+
+   Note the section shapes carry data-depth, so the hero's existing
+   parallax loop picks them up on its own — it queries the document
+   after this markup is parsed. No second animation loop is started.
+   ================================================================= */
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var doc = document.documentElement;
+
+  /* ---------------------------------------------------------------
+     REVEAL
+     .anim was set in the head, so the hidden state exists before the
+     first paint. If IntersectionObserver is missing we drop it again
+     and the page is simply static — never blank.
+     --------------------------------------------------------------- */
+  var targets = [].slice.call(document.querySelectorAll('[data-reveal]'));
+
+  if (!('IntersectionObserver' in window)) {
+    doc.classList.remove('anim');
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) {
+          entries[i].target.classList.add('in');
+          io.unobserve(entries[i].target);   /* arrives once, then stays */
+        }
+      }
+    }, {
+      /* Fires a little before the element reaches the viewport edge so
+         the movement is already underway when it becomes visible —
+         the reveal should never look like a reaction to the scroll. */
+      rootMargin: '0px 0px -12% 0px',
+      threshold: 0.08
+    });
+    targets.forEach(function (t) { io.observe(t); });
+
+    /* Anything already on screen at load (short viewports, a deep
+       link, a restored scroll position) is shown without waiting. */
+    requestAnimationFrame(function () {
+      targets.forEach(function (t) {
+        var r = t.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) {
+          t.classList.add('in');
+          io.unobserve(t);
+        }
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     NAV — appears only once the hero's own header is gone, so the
+     approved opening frame is never covered.
+     --------------------------------------------------------------- */
+  var nav = document.getElementById('nav');
+  var prog = document.getElementById('prog');
+  var hero = document.getElementById('top');
+  var links = [].slice.call(document.querySelectorAll('.nav-link'));
+  var ticking = false;
+
+  function onScroll() {
+    var y = window.pageYOffset || doc.scrollTop;
+    var trigger = (hero ? hero.offsetHeight : window.innerHeight) * 0.72;
+
+    nav.classList.toggle('show', y > trigger);
+
+    /* Progress of the page, not of the window: subtract the viewport
+       so the line reaches full width exactly at the footer. */
+    if (prog) {
+      var max = doc.scrollHeight - window.innerHeight;
+      prog.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0) + ')';
+    }
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
+  }, { passive: true });
+  onScroll();
+
+  /* Active link. A separate observer with a band across the middle of
+     the screen: whichever section owns the middle owns the nav. */
+  if ('IntersectionObserver' in window && links.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var id = '#' + e.target.id;
+        links.forEach(function (l) {
+          l.classList.toggle('active', l.getAttribute('href') === id);
+        });
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+
+    ['why', 'services', 'work', 'process'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) spy.observe(el);
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     MOBILE MENU
+     --------------------------------------------------------------- */
+  var burger = document.getElementById('burger');
+  var sheet = document.getElementById('sheet');
+
+  function menu(open) {
+    document.body.classList.toggle('menu', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  if (burger && sheet) {
+    burger.addEventListener('click', function () {
+      menu(!document.body.classList.contains('menu'));
+    });
+    sheet.addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') menu(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('menu')) menu(false);
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     SERVICES — the specimen
+     One discipline is filled in at a time. On a pointer that is
+     whichever one you are looking at; on a touch screen it is
+     whichever one you last tapped. The numeral and the description
+     follow, and the numerals travel in one direction — out through
+     the top, in from the bottom — so the column reads as a counter
+     rather than a crossfade.
+     --------------------------------------------------------------- */
+  var coarse = window.matchMedia('(hover: none)').matches;
+  var specList = document.querySelector('.spec-list');
+  if (specList) {
+    var tabs   = [].slice.call(specList.querySelectorAll('.spec-item'));
+    var nums   = [].slice.call(document.querySelectorAll('#spec-num span'));
+    var panels = [].slice.call(document.querySelectorAll('#spec-desc p'));
+    var ticks  = [].slice.call(document.querySelectorAll('#spec-ticks i'));
+    var cur = 0, hideT, resetT;
+
+    var show = function (i, focus) {
+      if (i === cur || !tabs[i]) return;
+      var prev = cur;
+      cur = i;
+
+      tabs[prev].classList.remove('on');
+      tabs[prev].setAttribute('aria-selected', 'false');
+      tabs[prev].tabIndex = -1;
+      tabs[i].classList.add('on');
+      tabs[i].setAttribute('aria-selected', 'true');
+      tabs[i].tabIndex = 0;
+
+      /* The outgoing numeral leaves upward, then — once it is invisible
+         — is put back below the line so its next entrance rises like
+         every other one. */
+      nums[prev].classList.remove('on');
+      nums[prev].classList.add('out');
+      clearTimeout(resetT);
+      resetT = setTimeout(function () {
+        nums.forEach(function (n, k) { if (k !== cur) n.classList.remove('out'); });
+      }, 780);
+      nums[i].classList.remove('out');
+      nums[i].classList.add('on');
+
+      if (ticks.length) {
+        ticks[prev].classList.remove('on');
+        ticks[i].classList.add('on');
+      }
+
+      /* The outgoing panel is only removed from the tree after it has
+         faded, or the transition would have nothing to run on. */
+      panels[prev].classList.remove('on');
+      clearTimeout(hideT);
+      hideT = setTimeout(function () {
+        panels.forEach(function (p, k) { if (k !== cur) p.hidden = true; });
+      }, 440);
+      panels[i].hidden = false;
+      requestAnimationFrame(function () { panels[i].classList.add('on'); });
+
+      if (focus) tabs[i].focus();
+    };
+
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { show(i); });
+      if (!coarse) t.addEventListener('mouseenter', function () { show(i); });
+      t.addEventListener('keydown', function (e) {
+        var k = e.key, n = null;
+        if (k === 'ArrowDown' || k === 'ArrowRight') n = (i + 1) % tabs.length;
+        else if (k === 'ArrowUp' || k === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+        else if (k === 'Home') n = 0;
+        else if (k === 'End') n = tabs.length - 1;
+        if (n === null) return;
+        e.preventDefault();
+        show(n, true);
+      });
+      /* Focus follows the keyboard, so tabbing in from elsewhere should
+         also fill the discipline in. */
+      t.addEventListener('focus', function () { show(i); });
+    });
+
+    if (coarse) {
+      var hint = document.getElementById('svc-hint');
+      if (hint) hint.textContent = 'Tap a discipline to fill it in.';
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     BRIEF FORM
+     No back end by design: it composes the mail the visitor would
+     have written anyway. Swap for a real endpoint when there is one.
+     --------------------------------------------------------------- */
+  var form = document.getElementById('brief');
+  if (form) {
+    var note = document.getElementById('brief-note');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = function (n) { return (form.elements[n] && form.elements[n].value || '').trim(); };
+
+      if (!v('name') || !v('email') || !v('message')) {
+        if (note) note.textContent = 'Name, email and a sentence, please.';
+        return;
+      }
+
+      var subject = 'New brief — ' + (v('company') || v('name'));
+      var body =
+        'Name: ' + v('name') + '\n' +
+        'Email: ' + v('email') + '\n' +
+        'Company: ' + (v('company') || '—') + '\n\n' +
+        v('message') + '\n';
+
+      if (note) note.textContent = 'Opening your mail app…';
+      window.location.href =
+        'mailto:hello@blue.agency?subject=' + encodeURIComponent(subject) +
+        '&body=' + encodeURIComponent(body);
+    });
+  }
+
+  /* --------------------------------------------------------------- */
+  var yr = document.getElementById('yr');
+  if (yr) yr.textContent = new Date().getFullYear();
+
+  /* Smooth scrolling is CSS-driven (scroll-behavior), so nothing is
+     wired here — except respecting a reduced-motion visitor, who gets
+     the jump the browser already gives them. */
+  if (reduced) { /* no-op, kept for symmetry with the hero script */ }
+})();
+</script>
+
+</body>
+</html>

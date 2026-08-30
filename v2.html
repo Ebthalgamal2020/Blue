@@ -1,0 +1,2338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLUE Advertising Agency — See The Bigger Picture</title>
+<meta name="description" content="BLUE is an advertising agency that starts at the widest setting: brand strategy, campaigns, content, media and digital, built so every fragment earns its place.">
+<link rel="icon" href="blue-logo.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Poppins:wght@400;500;600;900&display=swap" rel="stylesheet">
+
+<style>
+/* ===================================================================
+   BLUE — V2
+   No CSS framework. The hero canvas and the page below share one
+   token set, one cursor, and one motion curve, so the site reads as
+   a single object rather than a demo bolted to a template.
+   =================================================================== */
+
+:root{
+  /* Identity — fixed by the brand. */
+  --navy:#0F437F;
+  --orange:#F9AF1A;
+  --paper:#FFFFFF;
+  /* Derived, not invented: a deeper navy for inverted fields so the
+     display type has somewhere darker to sit, and a near-white with a
+     blue cast so alternating bands never read as grey. */
+  --deep:#082A52;
+  --paper-2:#F2F5F8;
+  --rule:rgba(15,67,127,.14);
+  --rule-lite:rgba(255,255,255,.18);
+
+  --glide:cubic-bezier(.16,1,.3,1);
+
+  /* One horizontal rhythm for every section, hero included. */
+  --pad:clamp(20px,5vw,88px);
+  --max:1440px;
+  --gutter:max(var(--pad), calc((100vw - var(--max)) / 2 + var(--pad)));
+  --band:clamp(88px,12vh,168px);
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+html{ scroll-behavior:smooth; scrollbar-gutter:stable; }
+body{
+  background:var(--paper); color:var(--navy);
+  font-family:'Poppins',system-ui,-apple-system,sans-serif;
+  font-weight:400; line-height:1.6;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+
+/* The hero owns the viewport until the whole picture has been seen. */
+html.locked, body.locked{ overflow:hidden; height:100%; }
+
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; color:inherit; }
+:focus-visible{ outline:3px solid var(--orange); outline-offset:3px; border-radius:2px; }
+::selection{ background:var(--orange); color:var(--navy); }
+
+/* -------------------------------------------------------------------
+   TYPE
+   Poppins 900 is the brand's display voice. IBM Plex Mono is added for
+   one job only: the instrument readouts — zoom, indices, coordinates,
+   labels. It is the vernacular of the tool the canvas imitates, and it
+   never appears above 13px.
+   ------------------------------------------------------------------- */
+.mono{ font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace; }
+
+.meta{
+  font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  font-size:11px; font-weight:500; letter-spacing:.2em;
+  text-transform:uppercase; line-height:1.4;
+}
+.micro-meta{
+  font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  font-size:10px; font-weight:400; letter-spacing:.18em;
+  text-transform:uppercase; line-height:1.5;
+}
+
+.d-xl{ font-weight:900; font-size:clamp(42px,8vw,124px); line-height:.86; letter-spacing:-.035em; }
+.d-l { font-weight:900; font-size:clamp(34px,5.4vw,82px);  line-height:.9;  letter-spacing:-.03em; }
+.d-m { font-weight:900; font-size:clamp(26px,4vw,56px);    line-height:.95; letter-spacing:-.025em; }
+.lead{ font-size:clamp(17px,1.45vw,21px); line-height:1.55; font-weight:400; }
+.body{ font-size:clamp(14.5px,1.05vw,16px); line-height:1.7; }
+
+.hl{ color:var(--orange); }
+.muted{ color:rgba(15,67,127,.55); }
+.muted-lite{ color:rgba(255,255,255,.6); }
+
+/* -------------------------------------------------------------------
+   LAYOUT
+   ------------------------------------------------------------------- */
+.wrap{ width:100%; max-width:var(--max); margin:0 auto; padding-inline:var(--pad); }
+.band{ padding-block:var(--band); position:relative; }
+/* Anchor targets clear the fixed chrome instead of hiding under it. */
+#about,#work,#services,#process,#clients,#contact{ scroll-margin-top:clamp(96px,11vw,152px); }
+.g12{ display:grid; grid-template-columns:repeat(12,1fr); gap:clamp(16px,2.2vw,32px); }
+.rule{ height:1px; background:var(--rule); border:0; margin:0; }
+
+/* Section eyebrow. The aperture is the structural device: it starts
+   shut (a solid disc — you are inside one letter) and opens one notch
+   per section until it is an empty ring at the contact block. Nothing
+   depends on decoding it; it just rewards a second look. */
+.eyebrow{ display:flex; align-items:center; gap:12px; margin-bottom:clamp(26px,4vh,52px); }
+.ap{
+  width:13px; height:13px; flex:none; border-radius:50%;
+  border:1.5px solid var(--orange); position:relative;
+}
+.ap::after{
+  content:''; position:absolute; inset:2px; border-radius:50%;
+  background:var(--orange); transform:scale(var(--fill,0));
+  transition:transform .7s var(--glide);
+}
+.eyebrow .lbl{ color:rgba(15,67,127,.5); }
+.on-deep .eyebrow .lbl{ color:rgba(255,255,255,.55); }
+
+/* -------------------------------------------------------------------
+   REVEAL ON SCROLL — one gesture, used once per element.
+   ------------------------------------------------------------------- */
+.rise{ opacity:0; transform:translateY(18px); }
+.rise.seen{
+  opacity:1; transform:none;
+  transition:opacity .9s ease-out, transform 1s var(--glide);
+}
+.rise.seen.s1{ transition-delay:.08s; }
+.rise.seen.s2{ transition-delay:.16s; }
+.rise.seen.s3{ transition-delay:.24s; }
+.rise.seen.s4{ transition-delay:.32s; }
+
+/* -------------------------------------------------------------------
+   CURSOR — the logo's aperture, used as the pointer for the whole
+   site, not just the canvas. Applied by JS so a script failure never
+   leaves a visitor with no cursor at all.
+   ------------------------------------------------------------------- */
+@media (pointer:fine){
+  body.has-cursor, body.has-cursor a, body.has-cursor button,
+  body.has-cursor .focusable, body.has-cursor #stage{ cursor:none; }
+}
+#cur{
+  position:fixed; top:0; left:0; z-index:200; pointer-events:none;
+  width:34px; height:34px; margin:-17px 0 0 -17px;
+  border:2px solid var(--orange); border-radius:50%; opacity:0;
+  transition:width .22s var(--glide), height .22s var(--glide),
+             margin .22s var(--glide), background-color .22s ease, opacity .3s ease;
+}
+body.has-cursor #cur{ opacity:1; }
+body.grabbing #cur{ width:20px; height:20px; margin:-10px 0 0 -10px; background-color:rgba(249,175,26,.35); }
+body.hovering #cur{ width:60px; height:60px; margin:-30px 0 0 -30px; }
+@media (pointer:coarse){ #cur{ display:none !important; } }
+
+/* ===================================================================
+   HERO CANVAS
+   One transformed layer carries every object, so panning thirty
+   things costs the same as panning one. Objects stay DOM (not
+   canvas 2D) so the type renders crisply and stays real text.
+   =================================================================== */
+#stage{
+  position:fixed; inset:0; overflow:hidden; z-index:0;
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+/* Once the sheet covers it the canvas stops listening, so a scroll
+   over the top of the page never fights the content. */
+body.past-hero #stage{ pointer-events:none; }
+/* After the unlock, vertical swipes belong to the page. Horizontal
+   drags still pan, so the canvas is not dead - just polite. */
+body.unlocked #stage{ touch-action:pan-y; }
+@media (pointer:coarse){ body.unlocked #stage{ pointer-events:none; } }
+
+#canvas{
+  position:absolute; top:0; left:0; transform-origin:0 0;
+  will-change:transform; opacity:0; transition:opacity .7s ease-out;
+}
+body.ready #canvas{ opacity:1; }
+
+.obj{ position:absolute; }
+.obj > .in{ will-change:transform; }
+
+.word{ font-weight:900; line-height:.85; letter-spacing:-.03em; color:var(--navy); white-space:nowrap; }
+.o-disc{ border-radius:50%; background:var(--orange); }
+.o-ring{ border-radius:50%; border:3px solid var(--orange); }
+.o-wedge{ border-radius:100% 0 0 0; background:var(--orange); transform:rotate(-12deg); }
+
+.plate{
+  border:2px solid rgba(15,67,127,.22);
+  display:flex; align-items:flex-end; justify-content:space-between;
+  padding:18px 22px; font-family:'IBM Plex Mono',Menlo,monospace;
+  font-size:24px; font-weight:500; letter-spacing:.24em; color:rgba(15,67,127,.4);
+}
+.plate .dot{ width:14px; height:14px; border-radius:50%; background:var(--orange); }
+
+/* Only legible once you have zoomed well in - the reward for
+   exploring rather than pressing the button. */
+.micro{
+  font-family:'IBM Plex Mono',Menlo,monospace;
+  font-size:24px; font-weight:400; letter-spacing:.14em;
+  color:rgba(15,67,127,.45); white-space:nowrap; text-transform:uppercase;
+}
+
+/* Workspace grid + crosshair - present only while you are dragging. */
+#grid{
+  position:fixed; inset:0; pointer-events:none; z-index:1;
+  opacity:0; transition:opacity .4s ease;
+  background-image:
+    linear-gradient(to right, rgba(15,67,127,.10) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15,67,127,.10) 1px, transparent 1px);
+}
+#cross{ position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0; transition:opacity .4s ease; }
+body.dragging #grid, body.dragging #cross{ opacity:1; }
+#cross i{ position:absolute; background:rgba(249,175,26,.5); display:block; }
+#cross .h{ left:0; right:0; height:1px; }
+#cross .v{ top:0; bottom:0; width:1px; }
+
+/* The hero is an empty transparent spacer: the canvas behind it is
+   fixed, and the sheet below simply rises over it. */
+#hero{ position:relative; z-index:1; height:100vh; height:100svh; pointer-events:none; }
+
+/* Everything after the hero. Opaque, so it covers the canvas. */
+#sheet{ position:relative; z-index:2; background:var(--paper); }
+
+/* ===================================================================
+   FIXED CHROME - logo, nav, readout. Never pans, so the brand is
+   never lost mid-explore.
+   =================================================================== */
+#chrome{
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:20px; padding:clamp(16px,2.4vw,30px) var(--pad);
+  pointer-events:none;
+}
+#chrome > *{ pointer-events:auto; }
+#chrome::before{
+  content:''; position:absolute; inset:0; z-index:-1;
+  background:var(--paper);
+  border-bottom:1px solid var(--rule);
+  opacity:0; transition:opacity .4s ease;
+}
+body.past-hero #chrome::before{ opacity:1; }
+
+/* Same crop maths as V1: ink is 969x510 at (264,494) in a 1500 square.
+   Margin percentages resolve against width on every side. */
+.logo-crop{ position:relative; overflow:hidden; aspect-ratio:969/510; }
+.logo-crop img{ display:block; max-width:none; width:154.799%; margin-left:-27.245%; margin-top:-50.980%; }
+#brand{ width:clamp(104px,11vw,150px); flex:none; transition:opacity .3s ease, visibility .3s; }
+
+#chrome-right{ display:flex; align-items:center; gap:clamp(14px,2vw,34px); }
+
+#nav{ display:flex; align-items:center; gap:clamp(14px,1.8vw,30px); }
+#nav a{ position:relative; color:rgba(15,67,127,.6); transition:color .25s ease; }
+#nav a::after{
+  content:''; position:absolute; left:0; right:0; bottom:-6px; height:2px;
+  background:var(--orange); transform:scaleX(0); transform-origin:0 50%;
+  transition:transform .35s var(--glide);
+}
+#nav a:hover, #nav a.here{ color:var(--navy); }
+#nav a:hover::after, #nav a.here::after{ transform:scaleX(1); }
+
+/* The readout is the site's spine. In the hero it reports real zoom;
+   past it, the same instrument reports where you are on the page. */
+#readout{
+  display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+  background:rgba(255,255,255,.86);
+  -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  border-radius:999px; padding:9px 15px; min-width:118px;
+  transition:background-color .4s ease, padding .4s ease, opacity .3s ease, visibility .3s;
+}
+body.past-hero #readout{ background:transparent; -webkit-backdrop-filter:none; backdrop-filter:none; padding:9px 0; }
+#zoom{ color:rgba(15,67,127,.75); white-space:nowrap; }
+#bar{ width:86px; height:2px; background:var(--rule); position:relative; overflow:hidden; }
+#bar i{ position:absolute; inset:0 auto 0 0; background:var(--orange); width:0; }
+
+#menu-btn{
+  display:none; align-items:center; gap:9px; background:none; border:0;
+  padding:8px 0; cursor:pointer; color:var(--navy);
+}
+#menu-btn .bars{ display:flex; flex-direction:column; gap:4px; width:20px; }
+#menu-btn .bars i{ height:2px; background:var(--navy); display:block; transition:transform .3s var(--glide), opacity .2s ease; }
+body.menu-open #menu-btn .bars i:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+body.menu-open #menu-btn .bars i:nth-child(2){ opacity:0; }
+body.menu-open #menu-btn .bars i:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
+
+/* Narrow-screen overlay menu. */
+#menu{
+  position:fixed; inset:0; z-index:95; background:var(--deep); color:#fff;
+  display:flex; flex-direction:column; justify-content:center; gap:4px;
+  padding:0 var(--pad); opacity:0; visibility:hidden;
+  transition:opacity .45s ease, visibility .45s;
+}
+body.menu-open #menu{ opacity:1; visibility:visible; }
+/* The chrome outranks the overlay so the toggle stays reachable, which
+   means everything in it has to survive landing on a navy field: the
+   logo's JPG carries a white ground, and navy-on-navy label and bars
+   would simply vanish. */
+body.menu-open #chrome::before{ opacity:0; }
+body.menu-open #brand, body.menu-open #readout{ opacity:0; visibility:hidden; }
+body.menu-open #menu-btn{ color:#fff; }
+body.menu-open #menu-btn .bars i{ background:#fff; }
+body.menu-open #controls{ opacity:0; visibility:hidden; }
+body.menu-open{ overflow:hidden; }
+#menu a{
+  font-weight:900; font-size:clamp(34px,9vw,64px); line-height:1.1;
+  letter-spacing:-.03em; color:#fff; transition:color .25s ease;
+}
+#menu a:hover{ color:var(--orange); }
+#menu .foot{ margin-top:clamp(30px,6vh,60px); color:rgba(255,255,255,.5); }
+
+/* ===================================================================
+   HERO CONTROLS - bottom cluster.
+   =================================================================== */
+#controls{
+  position:fixed; left:50%; bottom:clamp(22px,4vh,40px); z-index:100;
+  transform:translateX(-50%); display:flex; flex-direction:column;
+  align-items:center; gap:16px; pointer-events:none;
+}
+#controls > *{ pointer-events:auto; }
+body.past-hero #controls{ opacity:0; visibility:hidden; transition:opacity .35s ease, visibility .35s; }
+
+#hint{
+  background:rgba(255,255,255,.86); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  border-radius:999px; padding:8px 15px; color:rgba(15,67,127,.5);
+  white-space:nowrap; transition:opacity .6s ease, transform .6s var(--glide);
+}
+body.touched #hint{ opacity:0; transform:translateY(10px); pointer-events:none; }
+body.unlocked #hint{ opacity:1; transform:none; pointer-events:auto; }
+
+#reveal{
+  display:inline-flex; align-items:center; gap:12px;
+  background:var(--orange); color:var(--navy); border:0; border-radius:999px;
+  padding:15px 26px; font-family:'IBM Plex Mono',Menlo,monospace;
+  font-size:11px; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
+  cursor:pointer; box-shadow:0 8px 30px rgba(15,67,127,.16); overflow:hidden;
+  transition:transform .3s var(--glide), box-shadow .3s ease, opacity .35s ease;
+}
+#reveal:hover{ transform:translateY(-2px); box-shadow:0 14px 38px rgba(15,67,127,.22); }
+#reveal .ic{ width:15px; height:15px; border:2px solid var(--navy); border-radius:50%; flex:none; transition:transform .4s var(--glide); }
+body.at-fit #reveal .ic{ transform:scale(.45); }
+/* Once you are unlocked and looking at the whole picture the button
+   has done its job - the scroll track takes over. */
+body.unlocked.at-fit #reveal{ opacity:0; visibility:hidden; height:0; padding:0; border:0; }
+
+/* Scroll track, quoted from V1 - a focus indicator, not an arrow. */
+#track-wrap{ display:none; flex-direction:column; align-items:center; gap:12px; }
+body.unlocked.at-fit #track-wrap{ display:flex; }
+.track{ position:relative; width:1px; height:56px; background:var(--rule); overflow:hidden; }
+.track span{
+  position:absolute; inset:0 auto auto 0; width:1px; height:24px; background:var(--orange);
+  animation:track 2.2s cubic-bezier(.6,0,.4,1) infinite;
+}
+@keyframes track{
+  0%{ transform:translateY(-40%); opacity:0; }
+  18%{ opacity:1; } 82%{ opacity:1; }
+  100%{ transform:translateY(240%); opacity:0; }
+}
+
+/* ===================================================================
+   CROP MARKS - an artboard selection, borrowed from the tool the
+   canvas imitates. Used once, on the manifesto, so it stays a moment
+   rather than a motif.
+   =================================================================== */
+.crop{ position:relative; padding:clamp(22px,3.4vw,52px) clamp(20px,3vw,46px); }
+.crop > i{ position:absolute; width:18px; height:18px; border:2px solid var(--orange); }
+.crop > i.tl{ top:0; left:0;  border-right:0; border-bottom:0; }
+.crop > i.tr{ top:0; right:0; border-left:0;  border-bottom:0; }
+.crop > i.bl{ bottom:0; left:0;  border-right:0; border-top:0; }
+.crop > i.br{ bottom:0; right:0; border-left:0;  border-top:0; }
+
+/* ===================================================================
+   MANIFESTO - the payoff for the hero. It names what the visitor
+   just did, which is the one line only this site can open with.
+   =================================================================== */
+.mf{ background:var(--paper); }
+.mf-head{ grid-column:1 / span 10; }
+.mf-sub{ margin-top:clamp(20px,2.6vw,34px); max-width:34ch; color:rgba(15,67,127,.6); }
+.mf-body{ grid-column:7 / span 6; grid-row:2; margin-top:clamp(44px,7vh,96px); }
+.mf-body p{ margin:0 0 1.1em; max-width:52ch; }
+.mf-body p:last-child{ margin-bottom:0; }
+.mf-stats{ grid-column:1 / span 5; grid-row:2; margin-top:clamp(44px,7vh,96px); align-self:end; }
+.mf-stats dl{ margin:0; display:grid; gap:2px; }
+.mf-stats div{ display:flex; justify-content:space-between; gap:20px; padding:13px 0; border-bottom:1px solid var(--rule); }
+.mf-stats dt{ color:rgba(15,67,127,.5); }
+.mf-stats dd{ margin:0; font-weight:500; }
+
+/* ===================================================================
+   DUOTONE
+   Photography is mapped into the two brand inks rather than dropped in
+   at full colour: navy in the shadows, orange in the highlights. It
+   lets real campaign imagery sit next to flat brand shapes without the
+   page turning into a stock-photo collage.
+   =================================================================== */
+.duo{ position:relative; overflow:hidden; background:var(--navy); isolation:isolate; }
+.duo img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  filter:grayscale(1) contrast(1.2) brightness(.95);
+  mix-blend-mode:screen;
+}
+.duo::after{
+  content:''; position:absolute; inset:0; z-index:1;
+  background:var(--orange); mix-blend-mode:multiply;
+}
+
+/* ===================================================================
+   SERVICES - the studio floor.
+   Five disciplines pinned to a board, not stacked in a list. They
+   drift toward the cursor like the shapes on the hero canvas, and
+   opening one zooms it to fill the frame rather than pushing the page
+   around underneath you. Same grammar as the hero, one scale down.
+   =================================================================== */
+.sv{ background:var(--paper-2); }
+.sv-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:30px; flex-wrap:wrap; margin-bottom:clamp(24px,3.4vh,44px); }
+.sv-head p{ margin:0; max-width:38ch; color:rgba(15,67,127,.6); }
+
+.sv-stage{
+  position:relative; height:clamp(540px,58vh,660px);
+  margin-top:clamp(18px,2.4vh,34px);
+}
+body.has-cursor .sv-stage{ cursor:none; }
+
+.sv-card{
+  position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
+  transform:rotate(var(--rot));
+  transition:left .75s var(--glide), top .75s var(--glide),
+             width .75s var(--glide), height .75s var(--glide),
+             transform .75s var(--glide), opacity .45s ease;
+}
+/* Square and deliberate the moment it opens. Reading body copy on a two
+   degree slope looks like a mistake rather than a pin board, so the tilt
+   releases on the same curve the card zooms on. */
+.sv-card.active{ left:0; top:0; width:100%; height:100%; transform:none; z-index:6; }
+.sv-stage.open .sv-card:not(.active){ opacity:.07; pointer-events:none; }
+
+/* The magnet drift and the pinned-board rotation both live here, so the
+   card's own box animation never fights the per-frame transform. */
+.sv-in{
+  position:absolute; inset:0; overflow:hidden;
+  background:var(--navy); border:1px solid rgba(15,67,127,.25);
+  transition:border-color .35s ease, box-shadow .5s var(--glide), background-color .5s ease;
+}
+/* A foot, not a veil. Fading the photograph to 20% over a white card bleached
+   the navy out of its shadows; covering the whole plate in navy instead
+   desaturated the orange highlights into olive. Darkness is anchored to the
+   bottom third where the words are, so the upper half of every plate shows the
+   duotone clean and the orange still reads as orange. */
+.sv-in::before{
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to top,
+    rgba(8,42,82,.95) 0%, rgba(8,42,82,.88) 24%, rgba(8,42,82,.34) 58%, rgba(8,42,82,.06) 100%);
+  transition:opacity .5s ease;
+}
+.sv-card.active .sv-in{ background:var(--paper); }
+.sv-card.active .sv-in::before{ opacity:0; }
+.sv-card:hover .sv-in{ border-color:rgba(15,67,127,.4); box-shadow:0 18px 50px rgba(15,67,127,.14); }
+.sv-card.active .sv-in{ border-color:var(--navy); box-shadow:0 30px 80px rgba(15,67,127,.2); }
+
+/* Closed, the photo is a ground the name sits on. Open, it slides back
+   to a column and comes up to full strength. */
+.sv-shot{
+  position:absolute; inset:0; opacity:1;
+  transition:right .75s var(--glide), opacity .6s ease;
+}
+.sv-card.active .sv-shot{ right:50%; }
+
+.sv-face{
+  position:absolute; inset:0; width:100%; z-index:2;
+  background:none; border:0; cursor:pointer; text-align:left;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end;
+  gap:clamp(9px,1vw,14px);
+  padding:clamp(16px,1.6vw,26px); color:#fff;
+  transition:opacity .3s ease;
+}
+.sv-card.active .sv-face{ opacity:0; pointer-events:none; }
+.sv-face .top{ display:flex; align-items:center; gap:10px; }
+.sv-idx{ color:rgba(255,255,255,.68); }
+.sv-name{ font-weight:900; font-size:clamp(19px,2vw,32px); line-height:1.02; letter-spacing:-.022em; }
+.sv-cue{
+  display:inline-flex; align-items:center; gap:9px; flex:none;
+  border:1px solid rgba(255,255,255,.42); border-radius:999px; padding:8px 15px;
+  background:rgba(8,42,82,.4); color:#fff;
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+  transition:background-color .3s ease, border-color .3s ease, color .3s ease, transform .4s var(--glide);
+}
+.sv-card:hover .sv-cue{ background:var(--orange); border-color:var(--orange); color:var(--navy); transform:translateX(5px); }
+
+.sv-body{
+  position:absolute; inset:0 0 0 50%; z-index:3; overflow:auto;
+  padding:clamp(66px,7vw,104px) clamp(20px,2.4vw,44px) clamp(24px,3vw,48px);
+  opacity:0; pointer-events:none;
+  display:flex; flex-direction:column; justify-content:center;
+  transition:opacity .5s ease .15s;
+}
+.sv-card.active .sv-body{ opacity:1; pointer-events:auto; }
+.sv-meta{
+  position:absolute; top:clamp(20px,2.4vw,36px); left:clamp(20px,2.4vw,44px);
+  display:flex; align-items:center; gap:10px; color:rgba(15,67,127,.45);
+}
+.sv-body h3{ margin:0 0 clamp(12px,1.4vw,20px); font-weight:900;
+  font-size:clamp(22px,2.4vw,40px); line-height:1.02; letter-spacing:-.025em; }
+.sv-body p{ margin:0; max-width:48ch; color:rgba(15,67,127,.7); }
+.sv-tags{ display:flex; flex-wrap:wrap; gap:8px; margin:clamp(16px,2vw,26px) 0 0; padding:0; list-style:none; }
+.sv-tags li{ border:1px solid var(--rule); border-radius:999px; padding:6px 13px; color:rgba(15,67,127,.6); }
+.sv-more{
+  display:inline-flex; align-self:flex-start; align-items:center; gap:9px;
+  margin-top:clamp(18px,2.2vw,30px); padding-bottom:5px;
+  color:rgba(15,67,127,.55); border-bottom:1px solid rgba(15,67,127,.2);
+  transition:color .3s ease, border-color .3s ease;
+}
+.sv-more:hover{ color:var(--navy); border-color:var(--orange); }
+.sv-close{
+  position:absolute; top:clamp(16px,2vw,32px); right:clamp(16px,2vw,36px);
+  display:inline-flex; align-items:center; gap:9px; background:none;
+  border:1px solid var(--rule); border-radius:999px; padding:9px 15px;
+  cursor:pointer; color:rgba(15,67,127,.6); transition:border-color .3s ease, color .3s ease;
+}
+.sv-close:hover{ border-color:var(--orange); color:var(--navy); }
+
+.sv-hint{ display:flex; align-items:center; gap:10px; margin-top:clamp(16px,2vh,26px);
+  color:rgba(15,67,127,.45); transition:opacity .4s ease; }
+.sv-stage.open ~ .sv-hint{ opacity:0; }
+
+/* ===================================================================
+   WORK - the hero's physics, reused. Same drag, same momentum, same
+   grab cursor, so the rail feels like a slice of the same canvas.
+   Every card is a letterform cropped past its own edge: the thing the
+   visitor was trapped inside thirty seconds ago.
+   =================================================================== */
+.wk{ background:var(--deep); color:#fff; overflow:hidden; }
+.wk .eyebrow .lbl{ color:rgba(255,255,255,.55); }
+.wk-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:30px; flex-wrap:wrap; margin-bottom:clamp(34px,5vh,60px); }
+.wk-head p{ margin:0; max-width:36ch; color:rgba(255,255,255,.6); }
+
+.wk-view{ width:100%; overflow:hidden; touch-action:pan-y; }
+body.has-cursor .wk-view{ cursor:none; }
+.wk-rail{ display:flex; gap:clamp(14px,1.8vw,26px); will-change:transform; padding-inline:var(--gutter); }
+
+.wk-card{
+  position:relative; flex:none; width:clamp(238px,25vw,346px); aspect-ratio:3/4;
+  overflow:hidden; background:var(--field); color:var(--ink);
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding:clamp(18px,1.9vw,28px); text-decoration:none;
+  transition:transform .5s var(--glide);
+}
+.wk-card:hover{ transform:translateY(-8px); }
+.wk-mark{
+  position:absolute; left:-.07em; top:-.16em; margin:0; pointer-events:none;
+  font-weight:900; font-size:clamp(230px,29vw,400px); line-height:.74;
+  letter-spacing:-.06em; color:var(--mark); z-index:1;
+  transition:transform .7s var(--glide), opacity .55s ease;
+}
+.wk-card:hover .wk-mark{ transform:translate(6px,-6px); opacity:.5; }
+.wk-shot{ position:absolute; inset:0; z-index:0; opacity:.22;
+  transition:opacity .55s ease, transform .9s var(--glide); }
+.wk-card:hover .wk-shot{ opacity:.85; transform:scale(1.04); }
+/* The scrim is the card's own field, so it keeps the colour system
+   intact instead of dropping a generic black gradient over everything. */
+.wk-card::after{
+  content:''; position:absolute; inset:0; z-index:2; opacity:0; pointer-events:none;
+  background:linear-gradient(to top, var(--field) 6%, transparent 66%);
+  transition:opacity .55s ease;
+}
+.wk-card:hover::after{ opacity:.94; }
+.wk-txt{ position:relative; z-index:3; display:block; }
+.wk-cat, .wk-name, .wk-res{ display:block; }
+.wk-cat{ opacity:.65; }
+.wk-name{ font-weight:900; font-size:clamp(21px,1.9vw,28px); line-height:1.05; letter-spacing:-.02em; margin:10px 0 12px; }
+.wk-res{ font-size:13.5px; line-height:1.5; opacity:.8; max-width:26ch; margin:0; }
+.wk-arrow{ position:absolute; top:clamp(18px,1.9vw,28px); right:clamp(18px,1.9vw,28px);
+  z-index:3; font-size:18px; opacity:0; transform:translate(-6px,6px); transition:opacity .4s ease, transform .4s var(--glide); }
+.wk-card:hover .wk-arrow{ opacity:1; transform:none; }
+
+.wk-foot{ display:flex; align-items:center; gap:clamp(16px,2vw,28px); margin-top:clamp(28px,4vh,44px); flex-wrap:wrap; }
+.wk-foot .count{ color:rgba(255,255,255,.55); }
+.wk-prog{ flex:1 1 120px; min-width:100px; max-width:340px; height:2px; background:rgba(255,255,255,.2); position:relative; overflow:hidden; }
+.wk-prog i{ position:absolute; inset:0 auto 0 0; background:var(--orange); width:12%; }
+.wk-btns{ display:flex; gap:8px; margin-left:auto; }
+.wk-btns button{
+  width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.28);
+  background:none; color:#fff; cursor:pointer; display:grid; place-items:center; font-size:15px;
+  transition:background-color .3s ease, border-color .3s ease, color .3s ease, opacity .3s ease;
+}
+.wk-btns button:hover:not(:disabled){ background:var(--orange); border-color:var(--orange); color:var(--navy); }
+.wk-btns button:disabled{ opacity:.3; cursor:default; }
+
+/* ===================================================================
+   PROCESS - the aperture, as an instrument you operate.
+   The stages are a real sequence, so they are numbered; but reading a
+   five-column timeline is not the same as opening the aperture
+   yourself. Drag the track, click a notch, or use the arrow keys: the
+   blades retract, the stage changes, and the frame widens in front of
+   you. It is the page's own metaphor, made operable.
+   =================================================================== */
+.pr{ background:var(--paper); overflow:hidden; }
+.pr-head{ margin-bottom:clamp(30px,5vh,58px); }
+.pr-head p{ margin:clamp(16px,2.2vw,26px) 0 0; max-width:44ch; color:rgba(15,67,127,.6); }
+
+.pr-rig{ display:grid; grid-template-columns:minmax(240px,32%) 1fr; gap:clamp(28px,5vw,80px); align-items:center; }
+
+/* --- the dial ------------------------------------------------------ */
+.pr-dial{ position:relative; width:100%; max-width:400px; aspect-ratio:1; justify-self:center; }
+.pr-dial .win{ position:absolute; inset:7%; border-radius:50%; overflow:hidden; background:var(--navy); }
+.pr-dial .win .duo{ position:absolute; inset:0; opacity:0; transition:opacity .55s ease; }
+.pr-dial .win .duo.on{ opacity:1; }
+
+/* The blades are a navy field with a hole punched through it. The hole
+   grows with --open, so the aperture retracts from the rim inward the
+   way a real one does, instead of a dot shrinking in the middle. */
+.pr-dial .blades{
+  position:absolute; inset:7%; border-radius:50%; background:var(--paper);
+  -webkit-mask:radial-gradient(circle at 50% 50%, transparent calc(var(--open,0) * 50%), #000 calc(var(--open,0) * 50% + 0.5px));
+          mask:radial-gradient(circle at 50% 50%, transparent calc(var(--open,0) * 50%), #000 calc(var(--open,0) * 50% + 0.5px));
+}
+.pr-dial .rim{ position:absolute; inset:7%; border-radius:50%; border:1px solid var(--rule); }
+.pr-dial .sweep{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from -90deg, var(--orange) calc(var(--open,0) * 360deg), rgba(15,67,127,.09) 0);
+  -webkit-mask:radial-gradient(circle at 50% 50%, transparent 93%, #000 93.5%);
+          mask:radial-gradient(circle at 50% 50%, transparent 93%, #000 93.5%);
+}
+.pr-dial .read{
+  position:absolute; left:50%; bottom:-2px; transform:translate(-50%,50%);
+  background:var(--paper); padding:0 12px; color:rgba(15,67,127,.5); white-space:nowrap;
+}
+
+/* --- the stage panel ----------------------------------------------- */
+.pr-panel{ min-height:clamp(210px,26vh,270px); }
+.pr-num{ color:rgba(15,67,127,.4); display:block; margin-bottom:14px; }
+.pr-name{ font-weight:900; font-size:clamp(30px,4.6vw,66px); line-height:.98; letter-spacing:-.03em; margin:0 0 clamp(14px,1.8vw,22px); }
+.pr-copy{ margin:0; max-width:42ch; color:rgba(15,67,127,.65); }
+/* Only the words change between stages, so they are the only thing
+   that moves. Sliding the whole panel would read as a carousel. */
+.pr-swap{ transition:opacity .22s ease, transform .22s ease; }
+.pr-swap.out{ opacity:0; transform:translateY(8px); }
+
+/* --- the track ------------------------------------------------------ */
+.pr-track{
+  position:relative; margin-top:clamp(26px,4vh,44px); height:44px;
+  touch-action:pan-y; user-select:none;
+}
+body.has-cursor .pr-track{ cursor:none; }
+.pr-track .line{ position:absolute; left:0; right:0; top:21px; height:1px; background:var(--rule); }
+.pr-track .line i{ display:block; height:100%; background:var(--orange); transform-origin:0 50%; }
+.pr-notch{
+  position:absolute; top:11px; left:var(--p); width:22px; height:22px; margin-left:-11px;
+  border-radius:50%; border:1.5px solid var(--rule); background:var(--paper);
+  padding:0; cursor:pointer; transition:border-color .3s ease, transform .35s var(--glide);
+}
+.pr-notch::after{
+  content:''; position:absolute; inset:4px; border-radius:50%; background:var(--orange);
+  transform:scale(0); transition:transform .35s var(--glide);
+}
+.pr-notch.done{ border-color:var(--orange); }
+.pr-notch.done::after{ transform:scale(.42); }
+.pr-notch.now{ border-color:var(--orange); transform:scale(1.25); }
+.pr-notch.now::after{ transform:scale(1); }
+.pr-notch:hover{ border-color:var(--orange); }
+
+.pr-foot{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:18px; }
+.pr-foot .lbl{ color:rgba(15,67,127,.45); }
+.pr-steps-btns{ display:flex; gap:8px; }
+.pr-steps-btns button{
+  width:40px; height:40px; border-radius:50%; border:1px solid var(--rule); background:none;
+  cursor:pointer; color:var(--navy); display:grid; place-items:center; font-size:14px;
+  transition:background-color .3s ease, border-color .3s ease, color .3s ease, opacity .3s ease;
+}
+.pr-steps-btns button:hover:not(:disabled){ background:var(--orange); border-color:var(--orange); }
+.pr-steps-btns button:disabled{ opacity:.3; cursor:default; }
+
+/* ===================================================================
+   CLIENTS - the room.
+   A hairline table of names says nothing a list could not. These drift
+   on the same momentum the canvas runs on: scroll harder and the room
+   moves faster, stop and it settles back to a walking pace.
+   =================================================================== */
+.cl{ background:var(--paper-2); overflow:hidden; padding-block:clamp(56px,8vh,104px); }
+.cl-top{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  margin-bottom:clamp(26px,3.6vh,46px); }
+.cl-rows{ display:block; }
+.cl-row{ display:flex; width:max-content; will-change:transform; }
+.cl-row + .cl-row{ margin-top:clamp(6px,1vw,14px); }
+.cl-item{ display:flex; align-items:center; gap:clamp(10px,1.2vw,18px); padding-inline:clamp(14px,1.6vw,26px); white-space:nowrap; }
+.cl-item .n{
+  font-weight:900; font-size:clamp(22px,3.2vw,50px); line-height:1.1; letter-spacing:-.025em;
+  color:rgba(15,67,127,.26); transition:color .3s ease;
+}
+.cl-item .s{ color:rgba(15,67,127,.3); transition:color .3s ease; }
+.cl-item .pip{ width:7px; height:7px; border-radius:50%; background:var(--orange); opacity:.45; flex:none; }
+.cl-item:hover .n{ color:var(--navy); }
+.cl-item:hover .s{ color:var(--orange); }
+
+/* ===================================================================
+   CONTACT - the brief, composed on the page.
+   "Tell us the problem, not the deliverable" is an instruction, so the
+   section takes it: instead of a form asking for a name and a phone
+   number, you assemble the one sentence that actually matters and the
+   page writes the email from it.
+   =================================================================== */
+.ct{ background:var(--deep); color:#fff; position:relative; overflow:hidden; }
+.ct .eyebrow .lbl{ color:rgba(255,255,255,.55); }
+.ct-ap{
+  position:absolute; right:-8vw; top:50%; pointer-events:none;
+  width:clamp(300px,36vw,540px); aspect-ratio:1; border-radius:50%;
+  border:2px solid rgba(249,175,26,.5);
+  transform:translateY(-50%) scale(.86); opacity:0;
+  transition:transform 1.4s var(--glide) .1s, opacity 1.2s ease-out;
+}
+.ct-ap.seen{ transform:translateY(-50%) scale(1); opacity:1; }
+@media (max-width:1080px){ .ct-ap{ display:none; } }
+
+.ct-brief{
+  margin:clamp(30px,4vw,52px) 0 0; max-width:19ch;
+  font-weight:900; font-size:clamp(24px,3.4vw,52px); line-height:1.3; letter-spacing:-.025em;
+}
+.ct-chip{
+  display:inline-block; position:relative; font:inherit; color:var(--orange);
+  background:none; border:0; padding:0 .06em; margin:0; cursor:pointer;
+  white-space:nowrap; overflow:hidden; vertical-align:baseline;
+}
+.ct-chip::after{
+  content:''; position:absolute; left:.06em; right:.06em; bottom:.1em; height:.055em;
+  background:currentColor; opacity:.42; transition:opacity .3s ease;
+}
+.ct-chip:hover::after{ opacity:1; }
+.ct-chip .w{ display:inline-block; transition:transform .18s ease, opacity .18s ease; }
+.ct-chip.turn .w{ transform:translateY(-.5em); opacity:0; }
+.ct-chip .tick{
+  display:inline-block; width:.34em; height:.34em; margin-left:.24em; vertical-align:.16em;
+  border-right:.07em solid currentColor; border-bottom:.07em solid currentColor;
+  transform:rotate(45deg) translate(-.06em,-.06em); opacity:.55;
+}
+
+.ct-act{ display:flex; align-items:center; gap:clamp(16px,2.4vw,32px); flex-wrap:wrap;
+  margin-top:clamp(30px,4.4vh,52px); }
+.ct-send{
+  display:inline-flex; align-items:center; gap:12px;
+  background:var(--orange); color:var(--navy); border-radius:999px;
+  padding:16px 28px; box-shadow:0 10px 34px rgba(0,0,0,.28);
+  transition:transform .3s var(--glide), box-shadow .3s ease;
+}
+.ct-send:hover{ transform:translateY(-2px); box-shadow:0 16px 44px rgba(0,0,0,.34); }
+.ct-send .ic{ width:15px; height:15px; border:2px solid var(--navy); border-radius:50%; flex:none; }
+.ct-or{ color:rgba(255,255,255,.55); }
+.ct-or a{ color:#fff; position:relative; }
+.ct-or a::after{ content:''; position:absolute; left:0; right:0; bottom:-3px; height:1px;
+  background:var(--orange); transform:scaleX(0); transform-origin:0 50%; transition:transform .4s var(--glide); }
+.ct-or a:hover::after{ transform:scaleX(1); }
+
+.ct-cols{ display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(20px,3vw,44px);
+  margin-top:clamp(48px,7vh,88px); padding-top:clamp(26px,3.4vh,40px); border-top:1px solid var(--rule-lite); }
+.ct-col h3{ margin:0 0 14px; color:rgba(255,255,255,.5); font-weight:500;
+  font-family:'IBM Plex Mono',Menlo,monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; }
+.ct-col p, .ct-col a{ margin:0 0 6px; display:block; font-size:15px; line-height:1.6; color:rgba(255,255,255,.85); }
+.ct-col a{ transition:color .25s ease; }
+.ct-col a:hover{ color:var(--orange); }
+
+/* ===================================================================
+   FOOTER - closes the loop: back-to-top dives into the fragment
+   rather than just scrolling up.
+   =================================================================== */
+.ft{ background:var(--deep); color:rgba(255,255,255,.55); border-top:1px solid var(--rule-lite); }
+.ft-in{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  padding-block:clamp(24px,3.4vh,34px); }
+.ft-links{ display:flex; gap:clamp(14px,2vw,26px); flex-wrap:wrap; }
+.ft a{ transition:color .25s ease; }
+.ft a:hover{ color:var(--orange); }
+#to-top{ display:inline-flex; align-items:center; gap:10px; background:none; border:0; cursor:pointer;
+  color:rgba(255,255,255,.55); transition:color .25s ease; }
+#to-top:hover{ color:var(--orange); }
+#to-top .ap{ border-color:currentColor; }
+#to-top .ap::after{ background:currentColor; }
+
+/* ===================================================================
+   RESPONSIVE
+   =================================================================== */
+@media (max-width:1080px){
+  #nav{ display:none; }
+  #menu-btn{ display:inline-flex; }
+  .pr-rig{ grid-template-columns:1fr; gap:clamp(24px,4vh,44px); }
+  .pr-dial{ max-width:280px; justify-self:start; }
+  .pr-panel{ min-height:0; }
+}
+@media (max-width:860px){
+  .mf-head, .mf-body, .mf-stats{ grid-column:1 / -1; grid-row:auto; }
+  .mf-body{ margin-top:clamp(30px,4vh,50px); }
+  .mf-stats{ margin-top:clamp(30px,4vh,50px); }
+  .ct-cols{ grid-template-columns:1fr; gap:26px; }
+  .ct-brief{ max-width:none; }
+  .wk-card{ width:min(74vw,300px); }
+
+  /* The board cannot scatter in a phone's width, so it becomes a stack
+     of the same plates - still photographic, still one tap to open. */
+  .sv-stage{ height:auto; display:grid; gap:10px; }
+  .sv-card, .sv-card.active{ position:relative; left:auto; top:auto; width:auto; height:auto;
+    transform:none; z-index:auto; }
+  .sv-stage.open .sv-card:not(.active){ opacity:1; pointer-events:auto; }
+  .sv-in{ position:relative; inset:auto; }
+  .sv-meta{ position:relative; top:auto; left:auto; margin-bottom:16px; }
+  .sv-close{ position:relative; top:auto; right:auto; }
+  .sv-face{ position:relative; inset:auto; min-height:120px; }
+  .sv-card.active .sv-face{ display:none; }
+  .sv-card.active .sv-shot{ position:relative; inset:auto; right:auto; height:190px; opacity:1; }
+  .sv-body{ position:relative; inset:auto; opacity:1; pointer-events:auto; transition:none;
+    padding:clamp(20px,5vw,32px); }
+  .sv-card:not(.active) .sv-body{ display:none; }
+  .sv-close{ position:relative; top:auto; right:auto; margin-top:22px; align-self:flex-start; }
+}
+@media (max-width:520px){
+  #readout{ min-width:0; }
+  #bar{ width:60px; }
+  .ft-in{ justify-content:flex-start; }
+  .pr-dial{ max-width:210px; }
+}
+
+/* ===================================================================
+   REDUCED MOTION - the canvas still pans, it just stops easing, and
+   every instrument stays usable by click and keyboard.
+   =================================================================== */
+@media (prefers-reduced-motion:reduce){
+  html{ scroll-behavior:auto; }
+  *, *::before, *::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.001ms !important; }
+  .rise{ opacity:1; transform:none; }
+  .ap::after{ transition:none; }
+  .track span{ animation:none; opacity:1; transform:translateY(70%); }
+}
+</style>
+
+<noscript><style>
+  /* No script means no canvas, so the hero has nothing to hold. Collapse
+     it and let the document below stand on its own. */
+  #stage, #grid, #cross, #cur, #controls{ display:none !important; }
+  #hero{ height:clamp(96px,11vw,152px); }
+  .rise{ opacity:1; transform:none; }
+  .pr-line i{ transform:scaleX(1); }
+</style></noscript>
+</head>
+
+<body>
+
+<!-- ================================================================
+     THE CANVAS — fixed behind everything. The sheet below rises over
+     it on scroll rather than pushing it away.
+     ================================================================ -->
+<div id="stage"><div id="canvas"></div></div>
+<div id="grid"></div>
+<div id="cross"><i class="h"></i><i class="v"></i></div>
+<div id="cur"></div>
+
+<!-- ================================================================
+     FIXED CHROME
+     ================================================================ -->
+<header id="chrome">
+  <a href="#top" id="brand" class="logo-crop" aria-label="BLUE Advertising Agency — back to the top">
+    <img src="blue-logo.jpg" alt="BLUE Advertising Agency">
+  </a>
+
+  <div id="chrome-right">
+    <nav id="nav" class="meta" aria-label="Primary">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#process">Process</a>
+      <a href="#clients">Clients</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <button id="menu-btn" class="meta" aria-expanded="false" aria-controls="menu">
+      <span id="menu-label">Menu</span>
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+
+    <!-- One instrument, two jobs: real zoom inside the hero, page
+         position after it. Same face, same bar, same language. -->
+    <div id="readout" aria-hidden="true">
+      <div class="meta" id="zoom">1.00&times;</div>
+      <div id="bar"><i></i></div>
+    </div>
+  </div>
+</header>
+
+<div id="menu">
+  <a href="#work">Work</a>
+  <a href="#services">Services</a>
+  <a href="#process">Process</a>
+  <a href="#clients">Clients</a>
+  <a href="#contact">Contact</a>
+  <div class="foot meta">hello@blue.agency &nbsp;·&nbsp; +20 2 2735 0110</div>
+</div>
+
+<!-- ================================================================
+     HERO CONTROLS
+     ================================================================ -->
+<div id="controls">
+  <div id="hint" class="meta">Drag to explore &nbsp;·&nbsp; Scroll to pull back</div>
+  <button id="reveal" type="button">
+    <span class="ic" aria-hidden="true"></span><span id="reveal-label">See the bigger picture</span>
+  </button>
+  <div id="track-wrap">
+    <div class="track" aria-hidden="true"><span></span></div>
+    <span class="micro-meta" style="color:rgba(15,67,127,.5)">Keep looking</span>
+  </div>
+</div>
+
+<main id="top">
+
+  <!-- The canvas words are real text, but they live in the fixed layer
+       above. This is the document's actual heading. -->
+  <section id="hero" aria-label="Interactive canvas">
+    <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap">
+      BLUE Advertising Agency — see the bigger picture
+    </h1>
+  </section>
+
+  <div id="sheet">
+
+    <!-- ============================================================
+         MANIFESTO
+         ============================================================ -->
+    <section class="band mf" id="about">
+      <div class="wrap g12">
+
+        <div class="mf-head rise">
+          <div class="eyebrow" style="--fill:1">
+            <span class="ap" aria-hidden="true"></span>
+            <span class="lbl meta">The fragment</span>
+          </div>
+          <div class="crop">
+            <i class="tl" aria-hidden="true"></i><i class="tr" aria-hidden="true"></i>
+            <i class="bl" aria-hidden="true"></i><i class="br" aria-hidden="true"></i>
+            <h2 class="d-xl" style="margin:0">You were inside<br>one letter.</h2>
+          </div>
+          <p class="mf-sub lead">Most briefs start there too.</p>
+        </div>
+
+        <div class="mf-body rise s1 lead">
+          <p>A logo. A post. A fifteen-second cut. Every fragment matters, and none of it works until it adds up to something.</p>
+          <p>BLUE starts at the widest setting — the business, the category, the room where the decision actually gets made — then makes every piece earn its place in the frame.</p>
+        </div>
+
+        <div class="mf-stats rise s2">
+          <dl class="meta">
+            <div><dt>Founded</dt><dd>2009</dd></div>
+            <div><dt>Studio</dt><dd>Cairo &nbsp;·&nbsp; Dubai</dd></div>
+            <div><dt>Team</dt><dd>42, one floor</dd></div>
+            <div><dt>Retained</dt><dd>Avg. 4.1 years</dd></div>
+          </dl>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================
+         WORK — the hero's drag physics, reused at a smaller scale.
+         ============================================================ -->
+    <section class="band wk" id="work">
+      <div class="wrap">
+        <div class="wk-head rise">
+          <div>
+            <div class="eyebrow" style="--fill:.72">
+              <span class="ap" aria-hidden="true"></span>
+              <span class="lbl meta">Selected work</span>
+            </div>
+            <h2 class="d-l" style="margin:0">Proof,<br>at full size</h2>
+          </div>
+          <p class="lead">Six campaigns where the whole picture was the point. Drag the rail, or use the arrows.</p>
+        </div>
+      </div>
+
+      <div class="wk-view" id="wk-view">
+        <div class="wk-rail" id="wk-rail">
+
+          <a class="wk-card" href="#contact" style="--field:var(--orange);--ink:var(--navy);--mark:rgba(15,67,127,.13)">
+            <span class="wk-shot duo"><img src="assets/v3/ph03.jpg" alt="Illuminated billboards above a city intersection at dusk" loading="lazy"></span>
+            <span class="wk-mark" aria-hidden="true">H</span>
+            <span class="wk-arrow" aria-hidden="true">&rarr;</span>
+            <span class="wk-txt">
+              <span class="wk-cat micro-meta">Airline &nbsp;·&nbsp; Brand relaunch</span>
+              <span class="wk-name">Halcyon Air</span>
+              <span class="wk-res body">A national carrier repositioned in eleven weeks, cabin to campaign.</span>
+            </span>
+          </a>
+
+          <a class="wk-card" href="#contact" style="--field:var(--paper);--ink:var(--navy);--mark:rgba(15,67,127,.09)">
+            <span class="wk-shot duo"><img src="assets/v3/ph04.jpg" alt="A pasted campaign poster on a street hoarding" loading="lazy"></span>
+            <span class="wk-mark" aria-hidden="true">N</span>
+            <span class="wk-arrow" aria-hidden="true">&rarr;</span>
+            <span class="wk-txt">
+              <span class="wk-cat micro-meta">Consumer goods &nbsp;·&nbsp; Campaign</span>
+              <span class="wk-name">Norlake</span>
+              <span class="wk-res body">One idea across film, out-of-home and retail. Share up 4.2 points in a season.</span>
+            </span>
+          </a>
+
+          <a class="wk-card" href="#contact" style="--field:#0B3A70;--ink:#fff;--mark:rgba(249,175,26,.22)">
+            <span class="wk-shot duo"><img src="assets/v3/ph10.jpg" alt="Hands typing on a laptop at a desk" loading="lazy"></span>
+            <span class="wk-mark" aria-hidden="true">M</span>
+            <span class="wk-arrow" aria-hidden="true">&rarr;</span>
+            <span class="wk-txt">
+              <span class="wk-cat micro-meta">Finance &nbsp;·&nbsp; Brand system</span>
+              <span class="wk-name">Meridian Bank</span>
+              <span class="wk-res body">One system holding 260 branches, four products and a rebuilt app.</span>
+            </span>
+          </a>
+
+          <a class="wk-card" href="#contact" style="--field:var(--paper);--ink:var(--navy);--mark:rgba(249,175,26,.42)">
+            <span class="wk-shot duo"><img src="assets/v3/ph06.jpg" alt="Someone reading their phone on a busy street" loading="lazy"></span>
+            <span class="wk-mark" aria-hidden="true">9</span>
+            <span class="wk-arrow" aria-hidden="true">&rarr;</span>
+            <span class="wk-txt">
+              <span class="wk-cat micro-meta">Retail &nbsp;·&nbsp; Content &amp; social</span>
+              <span class="wk-name">Ninth Street</span>
+              <span class="wk-res body">A two-day shoot that fed nine months of feed without repeating itself.</span>
+            </span>
+          </a>
+
+          <a class="wk-card" href="#contact" style="--field:var(--orange);--ink:var(--navy);--mark:rgba(255,255,255,.5)">
+            <span class="wk-shot duo"><img src="assets/v3/ph05.jpg" alt="A large colour billboard mounted on a wall" loading="lazy"></span>
+            <span class="wk-mark" aria-hidden="true">O</span>
+            <span class="wk-arrow" aria-hidden="true">&rarr;</span>
+            <span class="wk-txt">
+              <span class="wk-cat micro-meta">Mobility &nbsp;·&nbsp; Launch</span>
+              <span class="wk-name">Orbit</span>
+              <span class="wk-res body">A city launch built backwards from the waiting list. Sold out in nine days.</span>
+            </span>
+          </a>
+
+          <a class="wk-card" href="#contact" style="--field:#0B3A70;--ink:#fff;--mark:rgba(255,255,255,.14)">
+            <span class="wk-shot duo"><img src="assets/v3/ph02.jpg" alt="A red neon sign glowing at night" loading="lazy"></span>
+            <span class="wk-mark" aria-hidden="true">R</span>
+            <span class="wk-arrow" aria-hidden="true">&rarr;</span>
+            <span class="wk-txt">
+              <span class="wk-cat micro-meta">Hospitality &nbsp;·&nbsp; Digital</span>
+              <span class="wk-name">The Ridge</span>
+              <span class="wk-res body">Direct bookings up 38% by removing three steps and one bad promise.</span>
+            </span>
+          </a>
+
+        </div>
+      </div>
+
+      <div class="wrap">
+        <div class="wk-foot">
+          <span class="count meta" id="wk-count">01 / 06</span>
+          <div class="wk-prog" aria-hidden="true"><i id="wk-prog"></i></div>
+          <div class="wk-btns">
+            <button type="button" id="wk-prev" aria-label="Previous project">&larr;</button>
+            <button type="button" id="wk-next" aria-label="Next project">&rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SERVICES — the studio floor. Pinned artboards on a board you
+         can push around, not a list of rows.
+         ============================================================ -->
+    <section class="band sv" id="services">
+      <div class="wrap">
+        <div class="sv-head rise">
+          <div>
+            <div class="eyebrow" style="--fill:.48">
+              <span class="ap" aria-hidden="true"></span>
+              <span class="lbl meta">What we do</span>
+            </div>
+            <h2 class="d-l" style="margin:0">Five disciplines,<br>one argument</h2>
+          </div>
+          <p class="lead">They sit on the same floor and answer to the same idea. That is the whole trick.</p>
+        </div>
+
+        <div class="sv-stage" id="sv-stage">
+
+          <article class="sv-card" style="--l:0%;--t:4%;--w:31%;--h:52%;--rot:-2.2deg">
+            <div class="sv-in">
+              <span class="sv-shot duo"><img src="assets/v3/ph01.jpg" alt="A hand-painted UNION mural on a street wall" loading="lazy"></span>
+              <button class="sv-face" type="button" aria-expanded="false">
+                <span class="top"><span class="ap" style="--fill:1" aria-hidden="true"></span><span class="sv-idx meta">01</span></span>
+                <span><span class="sv-name">Brand<br>strategy</span></span>
+                <span class="sv-cue micro-meta">Open <span aria-hidden="true">&rarr;</span></span>
+              </button>
+              <div class="sv-body">
+                <span class="sv-meta meta"><span class="ap" style="--fill:1" aria-hidden="true"></span>01 / 05</span>
+                <h3>Brand strategy</h3>
+                <p class="body">Positioning, architecture and the story that holds them together. It is the part everything else gets built on, so we finish it before anyone opens a design file.</p>
+                <ul class="sv-tags micro-meta">
+                  <li>Positioning</li><li>Naming</li><li>Brand architecture</li><li>Messaging</li><li>Guidelines</li>
+                </ul>
+                <a class="sv-more micro-meta" href="#work">See it in the work <span aria-hidden="true">&rarr;</span></a>
+                <button class="sv-close micro-meta" type="button">Close <span aria-hidden="true">&times;</span></button>
+              </div>
+            </div>
+          </article>
+
+          <article class="sv-card" style="--l:34%;--t:0%;--w:34%;--h:44%;--rot:1.6deg">
+            <div class="sv-in">
+              <span class="sv-shot duo"><img src="assets/v3/ph05.jpg" alt="A large colour campaign billboard mounted on a wall" loading="lazy"></span>
+              <button class="sv-face" type="button" aria-expanded="false">
+                <span class="top"><span class="ap" style="--fill:.72" aria-hidden="true"></span><span class="sv-idx meta">02</span></span>
+                <span><span class="sv-name">Campaign<br>&amp; creative</span></span>
+                <span class="sv-cue micro-meta">Open <span aria-hidden="true">&rarr;</span></span>
+              </button>
+              <div class="sv-body">
+                <span class="sv-meta meta"><span class="ap" style="--fill:.72" aria-hidden="true"></span>02 / 05</span>
+                <h3>Campaign &amp; creative</h3>
+                <p class="body">One idea, built to travel — film, print, out-of-home, and the feed. If it only works in the deck, it goes back.</p>
+                <ul class="sv-tags micro-meta">
+                  <li>Concept</li><li>Art direction</li><li>Copy</li><li>Key visuals</li><li>Channel toolkits</li>
+                </ul>
+                <a class="sv-more micro-meta" href="#work">See it in the work <span aria-hidden="true">&rarr;</span></a>
+                <button class="sv-close micro-meta" type="button">Close <span aria-hidden="true">&times;</span></button>
+              </div>
+            </div>
+          </article>
+
+          <article class="sv-card" style="--l:71%;--t:9%;--w:29%;--h:47%;--rot:-1.4deg">
+            <div class="sv-in">
+              <span class="sv-shot duo"><img src="assets/v3/ph06.jpg" alt="Someone scrolling their phone in the street" loading="lazy"></span>
+              <button class="sv-face" type="button" aria-expanded="false">
+                <span class="top"><span class="ap" style="--fill:.46" aria-hidden="true"></span><span class="sv-idx meta">03</span></span>
+                <span><span class="sv-name">Content &amp;<br>social</span></span>
+                <span class="sv-cue micro-meta">Open <span aria-hidden="true">&rarr;</span></span>
+              </button>
+              <div class="sv-body">
+                <span class="sv-meta meta"><span class="ap" style="--fill:.46" aria-hidden="true"></span>03 / 05</span>
+                <h3>Content &amp; social</h3>
+                <p class="body">Film, stills and motion made in-house, then cut for the platform it is going to live on. The people who sold the idea are on set for it.</p>
+                <ul class="sv-tags micro-meta">
+                  <li>Film</li><li>Photography</li><li>Motion</li><li>Instagram</li><li>Facebook</li><li>Community</li>
+                </ul>
+                <a class="sv-more micro-meta" href="#work">See it in the work <span aria-hidden="true">&rarr;</span></a>
+                <button class="sv-close micro-meta" type="button">Close <span aria-hidden="true">&times;</span></button>
+              </div>
+            </div>
+          </article>
+
+          <article class="sv-card" style="--l:8%;--t:59%;--w:35%;--h:41%;--rot:1.1deg">
+            <div class="sv-in">
+              <span class="sv-shot duo"><img src="assets/v3/ph09.jpg" alt="A marketing performance dashboard open on a desktop screen" loading="lazy"></span>
+              <button class="sv-face" type="button" aria-expanded="false">
+                <span class="top"><span class="ap" style="--fill:.22" aria-hidden="true"></span><span class="sv-idx meta">04</span></span>
+                <span><span class="sv-name">Media &amp;<br>performance</span></span>
+                <span class="sv-cue micro-meta">Open <span aria-hidden="true">&rarr;</span></span>
+              </button>
+              <div class="sv-body">
+                <span class="sv-meta meta"><span class="ap" style="--fill:.22" aria-hidden="true"></span>04 / 05</span>
+                <h3>Media &amp; performance</h3>
+                <p class="body">Planning and buying that answer to the same idea as the creative, not to a separate spreadsheet in a different building.</p>
+                <ul class="sv-tags micro-meta">
+                  <li>Planning</li><li>Buying</li><li>Paid social</li><li>Measurement</li><li>Reporting</li>
+                </ul>
+                <a class="sv-more micro-meta" href="#work">See it in the work <span aria-hidden="true">&rarr;</span></a>
+                <button class="sv-close micro-meta" type="button">Close <span aria-hidden="true">&times;</span></button>
+              </div>
+            </div>
+          </article>
+
+          <article class="sv-card" style="--l:52%;--t:53%;--w:36%;--h:45%;--rot:-2.6deg">
+            <div class="sv-in">
+              <span class="sv-shot duo"><img src="assets/v3/ph07.jpg" alt="Front-end source code open in an editor" loading="lazy"></span>
+              <button class="sv-face" type="button" aria-expanded="false">
+                <span class="top"><span class="ap" style="--fill:0" aria-hidden="true"></span><span class="sv-idx meta">05</span></span>
+                <span><span class="sv-name">Digital &amp;<br>experience</span></span>
+                <span class="sv-cue micro-meta">Open <span aria-hidden="true">&rarr;</span></span>
+              </button>
+              <div class="sv-body">
+                <span class="sv-meta meta"><span class="ap" style="--fill:0" aria-hidden="true"></span>05 / 05</span>
+                <h3>Digital &amp; experience</h3>
+                <p class="body">Sites, launches and platforms where the brand has to work, not just look right. Designed, built and measured by the same team.</p>
+                <ul class="sv-tags micro-meta">
+                  <li>Web design</li><li>Web development</li><li>CRM</li><li>Activation</li><li>Analytics</li>
+                </ul>
+                <a class="sv-more micro-meta" href="#work">See it in the work <span aria-hidden="true">&rarr;</span></a>
+                <button class="sv-close micro-meta" type="button">Close <span aria-hidden="true">&times;</span></button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <div class="sv-hint micro-meta" id="sv-hint">
+          <span class="ap" style="--fill:.5" aria-hidden="true"></span>
+          Move the board &nbsp;·&nbsp; Open a discipline
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PROCESS — the aperture, made operable. Drag the track, click a
+         notch or use the arrow keys; the blades retract and the frame
+         widens on the stage you are standing in.
+         ============================================================ -->
+    <section class="band pr" id="process">
+      <div class="wrap">
+        <div class="pr-head rise">
+          <div class="eyebrow" style="--fill:.28">
+            <span class="ap" aria-hidden="true"></span>
+            <span class="lbl meta">How we work</span>
+          </div>
+          <h2 class="d-l" style="margin:0">The aperture opens</h2>
+          <p class="lead">Five stages. Each one widens the frame a little further, so nothing gets decided before we can see what it touches. Open it yourself.</p>
+        </div>
+
+        <div class="pr-rig rise s1">
+
+          <div class="pr-dial" id="pr-dial" aria-hidden="true">
+            <div class="win" id="pr-win">
+              <span class="duo on"><img src="assets/v3/ph10.jpg" alt="" loading="lazy"></span>
+              <span class="duo"><img src="assets/v3/ph06.jpg" alt="" loading="lazy"></span>
+              <span class="duo"><img src="assets/v3/ph01.jpg" alt="" loading="lazy"></span>
+              <span class="duo"><img src="assets/v3/ph08.jpg" alt="" loading="lazy"></span>
+              <span class="duo"><img src="assets/v3/ph09.jpg" alt="" loading="lazy"></span>
+            </div>
+            <div class="blades"></div>
+            <div class="rim"></div>
+            <div class="sweep"></div>
+            <div class="read meta" id="pr-read">f/16 &nbsp;·&nbsp; closed</div>
+          </div>
+
+          <div>
+            <!-- The live region announces the stage for anyone driving
+                 the track from the keyboard rather than watching it. -->
+            <div class="pr-panel" aria-live="polite">
+              <span class="pr-num meta pr-swap" id="pr-num">Stage 01 of 05</span>
+              <h3 class="pr-name pr-swap" id="pr-name">Brief</h3>
+              <p class="pr-copy lead pr-swap" id="pr-copy">We interrogate it before we accept it. Half the work is agreeing on the real problem.</p>
+            </div>
+
+            <div class="pr-track" id="pr-track" role="group" aria-label="Process stage">
+              <div class="line"><i id="pr-fill" style="transform:scaleX(0)"></i></div>
+              <button class="pr-notch now" style="--p:0%"    data-i="0" type="button" aria-label="Stage 1: Brief"></button>
+              <button class="pr-notch" style="--p:25%"  data-i="1" type="button" aria-label="Stage 2: Insight"></button>
+              <button class="pr-notch" style="--p:50%"  data-i="2" type="button" aria-label="Stage 3: Idea"></button>
+              <button class="pr-notch" style="--p:75%"  data-i="3" type="button" aria-label="Stage 4: Make"></button>
+              <button class="pr-notch" style="--p:100%" data-i="4" type="button" aria-label="Stage 5: Measure"></button>
+            </div>
+
+            <div class="pr-foot">
+              <span class="lbl micro-meta" id="pr-hint">Drag the track, or use the arrow keys</span>
+              <div class="pr-steps-btns">
+                <button type="button" id="pr-prev" aria-label="Previous stage">&larr;</button>
+                <button type="button" id="pr-next" aria-label="Next stage">&rarr;</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CLIENTS — the room, running on the canvas's own momentum.
+         ============================================================ -->
+    <section class="cl" id="clients">
+      <div class="wrap cl-top rise">
+        <div>
+          <div class="eyebrow" style="--fill:.12">
+            <span class="ap" aria-hidden="true"></span>
+            <span class="lbl meta">The room</span>
+          </div>
+          <h2 class="d-m" style="margin:0">Who we do it with</h2>
+        </div>
+        <span class="meta muted">Twelve of them &nbsp;·&nbsp; Since 2009</span>
+      </div>
+      <div class="cl-rows" id="cl-rows" aria-label="Selected clients">
+        <div class="cl-row" data-dir="-1"></div>
+        <div class="cl-row" data-dir="1"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CONTACT — the brief, composed on the page. The chips cycle;
+         the mailto is rewritten from them as you go.
+         ============================================================ -->
+    <section class="band ct" id="contact">
+      <div class="ct-ap" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="rise">
+          <div class="eyebrow" style="--fill:0">
+            <span class="ap" aria-hidden="true"></span>
+            <span class="lbl meta">The whole thing</span>
+          </div>
+          <h2 class="d-l" style="margin:0">Tell us the problem,<br>not the deliverable.</h2>
+
+          <p class="ct-brief" id="ct-brief">
+            I need
+            <button class="ct-chip" type="button" data-chip="what"><span class="w">brand strategy</span><span class="tick" aria-hidden="true"></span></button>
+            for
+            <button class="ct-chip" type="button" data-chip="why"><span class="w">a launch</span><span class="tick" aria-hidden="true"></span></button>,
+            and I want to start
+            <button class="ct-chip" type="button" data-chip="when"><span class="w">this quarter</span><span class="tick" aria-hidden="true"></span></button>.
+          </p>
+
+          <div class="ct-act">
+            <a class="ct-send meta" id="ct-send" href="mailto:hello@blue.agency">
+              <span class="ic" aria-hidden="true"></span>Send this brief
+            </a>
+            <span class="ct-or body">or write to <a href="mailto:hello@blue.agency">hello@blue.agency</a></span>
+          </div>
+          <p class="micro-meta" id="ct-live" aria-live="polite" style="margin:18px 0 0;color:rgba(255,255,255,.45)"></p>
+        </div>
+
+        <div class="ct-cols rise s1">
+          <div class="ct-col">
+            <h3>Studio</h3>
+            <p>14 Road 231, Degla<br>Maadi, Cairo 11431<br>Egypt</p>
+          </div>
+          <div class="ct-col">
+            <h3>Talk to us</h3>
+            <a href="tel:+20227350110">+20 2 2735 0110</a>
+            <a href="mailto:newbusiness@blue.agency">newbusiness@blue.agency</a>
+            <a href="mailto:careers@blue.agency">careers@blue.agency</a>
+          </div>
+          <div class="ct-col">
+            <h3>Elsewhere</h3>
+            <a href="#" rel="noopener">Instagram</a>
+            <a href="#" rel="noopener">LinkedIn</a>
+            <a href="#" rel="noopener">Behance</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER — closes the loop back into the canvas.
+         ============================================================ -->
+    <footer class="ft">
+      <div class="wrap ft-in">
+        <span class="micro-meta">&copy; 2026 BLUE Advertising Agency</span>
+        <nav class="ft-links micro-meta" aria-label="Footer">
+          <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Careers</a>
+          <a href="assets/v3/CREDITS.json">Image credits</a><a href="index.html">V1</a>
+        </nav>
+        <button type="button" id="to-top" class="micro-meta">
+          <span class="ap" style="--fill:1" aria-hidden="true"></span>Back to the fragment
+        </button>
+      </div>
+    </footer>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fine   = matchMedia('(pointer: fine)').matches;
+  var doc    = document;
+  var body   = doc.body;
+  var root   = doc.documentElement;
+
+  var stage  = doc.getElementById('stage');
+  var canvas = doc.getElementById('canvas');
+  var grid   = doc.getElementById('grid');
+  var crossH = doc.querySelector('#cross .h');
+  var crossV = doc.querySelector('#cross .v');
+  var cur    = doc.getElementById('cur');
+  var zoomEl = doc.getElementById('zoom');
+  var barEl  = doc.querySelector('#bar i');
+  var revealBtn = doc.getElementById('reveal');
+  var revealLbl = doc.getElementById('reveal-label');
+  var hintEl = doc.getElementById('hint');
+
+  /* =============================================================
+     THE COMPOSITION
+     World units. Zoomed out this is a designed poster; zoomed in you
+     are inside a letterform and none of it reads. Two compositions,
+     not one scaled down: a landscape canvas fitted to a portrait
+     phone lands as a stranded strip and the payoff falls flat.
+     ============================================================= */
+  var LANDSCAPE = { W:2600, H:1520, FOCUS:{ x:420, y:1080 }, OBJECTS:[
+    { t:'word', s:'SEE',     x:180,  y:120,  size:250 },
+    { t:'word', s:'THE',     x:740,  y:120,  size:250 },
+    { t:'word', s:'BIGGER',  x:180,  y:420,  size:430 },
+    { t:'word', s:'PICTURE', x:180,  y:850,  size:570 },
+
+    { t:'disc',  x:2030, y:110,  size:340 },
+    { t:'ring',  x:1760, y:880,  size:520 },
+    { t:'wedge', x:30,   y:600,  size:190 },
+
+    { t:'plate', x:2150, y:600,  w:340, h:230, n:'01' },
+    { t:'plate', x:60,   y:1360, w:300, h:120, n:'02' },
+    { t:'plate', x:1330, y:30,   w:300, h:110, n:'03' },
+
+    /* Kept in open canvas, never inside a letterform - text sitting in
+       a counter gets sliced by the glyph and reads as a render fault. */
+    { t:'micro', s:'not the whole thing yet', x:700,  y:1390 },
+    { t:'micro', s:'still a fragment',        x:1250, y:300  },
+    { t:'micro', s:'keep going',              x:1850, y:1400 },
+    { t:'micro', s:'almost',                  x:2200, y:480  }
+  ]};
+
+  var PORTRAIT = { W:1400, H:2050, FOCUS:{ x:230, y:1250 }, OBJECTS:[
+    { t:'word', s:'SEE',     x:110, y:170,  size:300 },
+    { t:'word', s:'THE',     x:110, y:450,  size:300 },
+    { t:'word', s:'BIGGER',  x:110, y:790,  size:330 },
+    { t:'word', s:'PICTURE', x:110, y:1130, size:300 },
+
+    { t:'disc',  x:1020, y:120,  size:270 },
+    { t:'ring',  x:820,  y:1400, size:420 },
+    { t:'wedge', x:20,   y:640,  size:150 },
+
+    { t:'plate', x:980, y:520,  w:300, h:200, n:'01' },
+    { t:'plate', x:110, y:1560, w:280, h:120, n:'02' },
+    { t:'plate', x:110, y:1790, w:380, h:140, n:'03' },
+
+    { t:'micro', s:'still a fragment',        x:700,  y:760  },
+    { t:'micro', s:'not the whole thing yet', x:110,  y:1490 },
+    { t:'micro', s:'keep going',              x:820,  y:1960 },
+    { t:'micro', s:'almost',                  x:1010, y:430  }
+  ]};
+
+  /* Explicit stacking, not DOM order: orange never sits on navy type. */
+  var Z = { disc:1, ring:1, wedge:1, plate:2, word:3, micro:4 };
+
+  var W, H, FOCUS, layoutName = '';
+  var magnets = [];   // shapes + plates drift toward the cursor; words do not
+
+  function pickLayout() { return innerWidth / innerHeight < 0.92 ? 'p' : 'l'; }
+
+  function build(name) {
+    var L = name === 'p' ? PORTRAIT : LANDSCAPE;
+    layoutName = name;
+    W = L.W; H = L.H; FOCUS = L.FOCUS;
+    canvas.innerHTML = '';
+    magnets = [];
+    L.OBJECTS.forEach(makeObject);
+  }
+
+  function makeObject(o) {
+    var el = doc.createElement('div');
+    el.className = 'obj';
+    el.style.left = o.x + 'px';
+    el.style.top  = o.y + 'px';
+    el.style.zIndex = Z[o.t] || 1;
+
+    var inner = doc.createElement('div');
+    inner.className = 'in';
+
+    if (o.t === 'word') {
+      inner.className += ' word focusable';
+      inner.style.fontSize = o.size + 'px';
+      inner.textContent = o.s;
+    } else if (o.t === 'micro') {
+      inner.className += ' micro';
+      inner.textContent = o.s;
+    } else if (o.t === 'plate') {
+      inner.className += ' plate focusable';
+      inner.style.width = o.w + 'px';
+      inner.style.height = o.h + 'px';
+      inner.innerHTML = '<span>' + o.n + '</span><span class="dot"></span>';
+      /* Centre is known from the data, so the per-frame magnet loop
+         never has to read layout and never forces a reflow. */
+      magnets.push({ inner:inner, cx:o.x + o.w / 2, cy:o.y + o.h / 2, wedge:false });
+    } else {
+      inner.className += ' o-' + o.t;
+      inner.style.width = o.size + 'px';
+      inner.style.height = o.size + 'px';
+      magnets.push({ inner:inner, cx:o.x + o.size / 2, cy:o.y + o.size / 2, wedge:o.t === 'wedge' });
+    }
+
+    el.appendChild(inner);
+    canvas.appendChild(el);
+  }
+
+  /* =============================================================
+     VIEW STATE - target vs current, lerped every frame.
+     ============================================================= */
+  var vw, vh, fitScale;
+  var tX = 0, tY = 0, tS = 1;      // where we are heading
+  var cX = 0, cY = 0, cS = 1;      // where we are
+  var vX = 0, vY = 0;              // release momentum
+  var lerp = 0.18;
+
+  var ptrs = new Map(), dragging = false, moved = 0, lastDist = 0, lastMid = null;
+  var mx = -999, my = -999, hasPointer = false, curX = 0, curY = 0;
+
+  function measure() {
+    vw = innerWidth; vh = innerHeight;
+    var pad = Math.min(vw, vh) * 0.06;
+    fitScale = Math.min((vw - pad * 2) / W, (vh - pad * 2) / H);
+  }
+
+  function fitView()  { return { s:fitScale, x:(vw - W * fitScale) / 2, y:(vh - H * fitScale) / 2 }; }
+  function startView(){
+    var s = fitScale * 3.4;                 // same pull-back factor as V1
+    return { s:s, x: vw / 2 - FOCUS.x * s, y: vh / 2 - FOCUS.y * s };
+  }
+
+  /* Keep some canvas on screen - you can roam, but not get lost. */
+  function clampView() {
+    var wW = W * tS, wH = H * tS, gx = vw * 0.2, gy = vh * 0.2;
+    if (wW <= vw) tX = (vw - wW) / 2; else tX = Math.min(gx, Math.max(vw - wW - gx, tX));
+    if (wH <= vh) tY = (vh - wH) / 2; else tY = Math.min(gy, Math.max(vh - wH - gy, tY));
+  }
+
+  function zoomAt(px, py, factor) {
+    var ns = Math.min(fitScale * 8, Math.max(fitScale * 0.8, tS * factor));
+    var r = ns / tS;
+    tX = px - (px - tX) * r;
+    tY = py - (py - tY) * r;
+    tS = ns;
+    clampView();
+  }
+
+  /* A programmatic move eases slower than a drag - it should read as
+     the canvas travelling, not snapping. */
+  function glideTo(v) { tS = v.s; tX = v.x; tY = v.y; clampView(); lerp = 0.055; }
+
+  function focusOn(el) {
+    var w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
+    var s = Math.min(vw * 0.78 / w, vh * 0.7 / h);
+    s = Math.min(fitScale * 8, Math.max(fitScale * 0.8, s));
+    glideTo({ s:s, x: vw / 2 - (el.offsetLeft + w / 2) * s, y: vh / 2 - (el.offsetTop + h / 2) * s });
+  }
+
+  function touched() { body.classList.add('touched'); }
+
+  /* =============================================================
+     THE RELEASE
+     Seeing the whole picture is what unlocks the site. Scrolling down
+     already pulls the canvas back toward fit, so the ordinary gesture
+     reaches the ordinary outcome - nobody can get stranded in the
+     hero, and nobody is dropped past it before the payoff lands.
+     ============================================================= */
+  var unlocked = false;
+
+  function lockIfAtTop() {
+    /* Reloading part-way down the page should not yank the visitor back
+       into the hero, so the lock only applies from the top. */
+    if (reduce || (scrollY || pageYOffset) > 10) { unlocked = true; body.classList.add('unlocked'); return; }
+    root.classList.add('locked');
+    body.classList.add('locked');
+  }
+
+  function unlock() {
+    if (unlocked) return;
+    unlocked = true;
+    root.classList.remove('locked');
+    body.classList.remove('locked');
+    body.classList.add('unlocked');
+    hintEl.textContent = 'Scroll on · Drag the canvas any time';
+    body.classList.remove('touched');
+    /* The hint has new information now, so it earns one more showing.
+       Hide it again once the visitor has actually moved on. */
+    setTimeout(function () { body.classList.add('touched'); }, 4200);
+  }
+
+  lockIfAtTop();
+
+  /* =============================================================
+     WORK RAIL - the hero's physics at a smaller scale.
+     ============================================================= */
+  var railView = doc.getElementById('wk-view');
+  var rail     = doc.getElementById('wk-rail');
+  var railPrev = doc.getElementById('wk-prev');
+  var railNext = doc.getElementById('wk-next');
+  var railCount= doc.getElementById('wk-count');
+  var railProg = doc.getElementById('wk-prog');
+  var cards    = rail ? [].slice.call(rail.children) : [];
+
+  var rTarget = 0, rCur = 0, rVel = 0, rMax = 0, rStep = 1;
+  var rDrag = false, rLastX = 0, rMoved = 0, rPtr = null, railLive = false;
+  var cardLeft = [], cardW = [], railGutter = 0;
+
+  /* Geometry is cached here and nowhere else, so the per-frame status
+     update never reads layout back mid-frame. */
+  function railMeasure() {
+    if (!rail) return;
+    railGutter = parseFloat(getComputedStyle(rail).paddingLeft) || 0;
+    cardLeft = []; cardW = [];
+    for (var i = 0; i < cards.length; i++) {
+      cardLeft.push(cards[i].offsetLeft);
+      cardW.push(cards[i].offsetWidth);
+    }
+    /* scrollWidth stops at the last card's edge and drops the rail's
+       right padding, which would park the final card flush against the
+       viewport while the first one keeps its gutter. Measure the end
+       from the card itself and add the gutter back. */
+    var n = cards.length - 1;
+    var content = n >= 0 ? cardLeft[n] + cardW[n] + railGutter : 0;
+    rMax = Math.min(0, railView.clientWidth - content);
+    rStep = cards.length > 1 ? cardLeft[1] - cardLeft[0] : (cardW[0] || 1);
+    if (rStep < 1) rStep = 1;
+    rTarget = Math.max(rMax, Math.min(0, rTarget));
+  }
+
+  function railTo(x) { rTarget = Math.max(rMax, Math.min(0, x)); rVel = 0; }
+
+  function pad2(n) { n = String(n); return n.length < 2 ? '0' + n : n; }
+
+  /* Three cards fit at desktop width, so "01 / 06" would stall at 03 and
+     never reach the end. Report the range actually on screen instead -
+     it is the truth, and it reads like the instrument it is drawn as. */
+  function railStatus() {
+    if (!rail || !cardLeft.length) return;
+    var viewW = railView.clientWidth, first = -1, last = 0;
+    for (var i = 0; i < cardLeft.length; i++) {
+      var l = cardLeft[i] + rCur, r = l + cardW[i];
+      if (Math.min(r, viewW) - Math.max(l, 0) > cardW[i] * 0.5) {
+        if (first < 0) first = i;
+        last = i;
+      }
+    }
+    if (first < 0) first = last = 0;
+    railCount.textContent =
+      (first === last ? pad2(first + 1) : pad2(first + 1) + '–' + pad2(last + 1)) +
+      ' / ' + pad2(cards.length);
+    railProg.style.width =
+      Math.max(8, Math.min(100, (rMax < 0 ? rCur / rMax : 0) * 100)) + '%';
+    railPrev.disabled = rTarget >= -1;
+    railNext.disabled = rTarget <= rMax + 1;
+  }
+
+  if (rail) {
+    railPrev.addEventListener('click', function () { railTo(Math.round(rTarget / rStep) * rStep + rStep); });
+    railNext.addEventListener('click', function () { railTo(Math.round(rTarget / rStep) * rStep - rStep); });
+
+    railView.addEventListener('pointerdown', function (e) {
+      if (rMax >= 0) return;
+      rDrag = true; rMoved = 0; rVel = 0; rLastX = e.clientX; rPtr = e.pointerId;
+      try { railView.setPointerCapture(e.pointerId); } catch (err) {}
+      body.classList.add('grabbing');
+    });
+    railView.addEventListener('pointermove', function (e) {
+      if (!rDrag || e.pointerId !== rPtr) return;
+      var dx = e.clientX - rLastX;
+      rLastX = e.clientX; rMoved += Math.abs(dx);
+      rTarget = Math.max(rMax - 90, Math.min(90, rTarget + dx));
+      rVel = dx;
+    });
+    function railEnd(e) {
+      if (!rDrag || (e && e.pointerId !== rPtr)) return;
+      rDrag = false; rPtr = null;
+      body.classList.remove('grabbing');
+      rTarget = Math.max(rMax, Math.min(0, rTarget));
+    }
+    railView.addEventListener('pointerup', railEnd);
+    railView.addEventListener('pointercancel', railEnd);
+
+    /* A drag that ends on a card must not also open the card. */
+    rail.addEventListener('click', function (e) {
+      if (rMoved > 6) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+
+    /* Trackpads with a horizontal axis steer the rail directly; the
+       vertical axis is left alone so the page still scrolls. */
+    railView.addEventListener('wheel', function (e) {
+      if (rMax >= 0 || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      railTo(rTarget - e.deltaX);
+    }, { passive:false });
+
+    /* The rail only animates while it is on screen. */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { railLive = es[0].isIntersecting; },
+        { rootMargin:'150px' }).observe(railView);
+    } else { railLive = true; }
+  }
+
+  /* =============================================================
+     ONE FRAME LOOP for the whole site.
+     ============================================================= */
+  var pastHero = false;
+  var svRect = null, prLive = false, prLastPct = -1;
+  var scrollVel = 0, lastScrollY = 0;
+
+  function frame() {
+    /* ---- canvas: idle entirely once the sheet has covered it ---- */
+    if (!pastHero) {
+      if (reduce) {
+        cX = tX; cY = tY; cS = tS;
+      } else {
+        if (!dragging && (Math.abs(vX) > 0.06 || Math.abs(vY) > 0.06)) {
+          tX += vX; tY += vY; vX *= 0.93; vY *= 0.93; clampView();
+        }
+        cX += (tX - cX) * lerp;
+        cY += (tY - cY) * lerp;
+        cS += (tS - cS) * lerp;
+      }
+
+      canvas.style.transform =
+        'translate3d(' + cX.toFixed(2) + 'px,' + cY.toFixed(2) + 'px,0) scale(' + cS.toFixed(5) + ')';
+
+      /* The grid pans with the content and scales with zoom, but its
+         lines stay 1px - a scaled grid thickens into stripes. */
+      if (dragging) {
+        var cell = 80 * cS;
+        while (cell < 26) cell *= 2;
+        while (cell > 420) cell /= 2;
+        grid.style.backgroundSize = cell + 'px ' + cell + 'px';
+        grid.style.backgroundPosition = (cX % cell) + 'px ' + (cY % cell) + 'px';
+        crossH.style.top = my + 'px';
+        crossV.style.left = mx + 'px';
+      }
+
+      /* magnetism - shapes and plates only. Heavy type stays anchored. */
+      if (hasPointer && !reduce) {
+        var wx = (mx - cX) / cS, wy = (my - cY) / cS, R = 780;
+        for (var i = 0; i < magnets.length; i++) {
+          var m = magnets[i];
+          var dx = wx - m.cx, dy = wy - m.cy;
+          var d = Math.hypot(dx, dy);
+          if (d > R || d < 0.001) { m.inner.style.transform = m.wedge ? 'rotate(-12deg)' : ''; continue; }
+          var pull = 26 * (1 - d / R);
+          m.inner.style.transform =
+            'translate(' + ((dx / d) * pull).toFixed(1) + 'px,' + ((dy / d) * pull).toFixed(1) + 'px)' +
+            (m.wedge ? ' rotate(-12deg)' : '');
+        }
+      }
+
+      /* 1.00x IS the whole picture - readout and payoff agree. */
+      var rel = cS / fitScale;
+      zoomEl.textContent = rel.toFixed(2) + '×';
+      barEl.style.width = Math.max(2, Math.min(100, (rel - 0.8) / (8 - 0.8) * 100)) + '%';
+
+      var atFit = tS <= fitScale * 1.06;
+      body.classList.toggle('at-fit', atFit);
+      revealLbl.textContent = atFit ? 'Dive back in' : 'See the bigger picture';
+      if (atFit) unlock();
+    }
+
+    /* ---- work rail ---- */
+    if (rail && railLive) {
+      if (!rDrag && !reduce && Math.abs(rVel) > 0.1) {
+        rTarget = Math.max(rMax - 40, Math.min(40, rTarget + rVel));
+        rVel *= 0.92;
+      }
+      var prev = rCur;
+      rCur = reduce ? rTarget : rCur + (rTarget - rCur) * 0.14;
+      if (Math.abs(rCur - prev) > 0.01 || prev === 0) {
+        rail.style.transform = 'translate3d(' + rCur.toFixed(2) + 'px,0,0)';
+        railStatus();
+      }
+    }
+
+    /* ---- services board: the hero's magnetism, one scale down ---- */
+    if (svFloor && svLive && svRect && svMag.length && hasPointer && !reduce && !svOpen) {
+      var sx = mx - svRect.left, sy = my - svRect.top, SR = 560;
+      for (var s = 0; s < svMag.length; s++) {
+        var g = svMag[s];
+        var gx = sx - g.cx, gy = sy - g.cy;
+        var gd = Math.hypot(gx, gy);
+        var gp = (gd > SR || gd < 0.001) ? 0 : 22 * (1 - gd / SR);
+        g.inner.style.transform =
+          'translate(' + (gd ? (gx / gd) * gp : 0).toFixed(1) + 'px,' +
+                         (gd ? (gy / gd) * gp : 0).toFixed(1) + 'px)';
+      }
+    }
+
+    /* ---- process dial: one value drives blades, sweep and readout ---- */
+    if (prDial && prLive) {
+      var pd = prTarget - prNow;
+      if (Math.abs(pd) > 0.0004 || prDragging) {
+        prNow += reduce ? pd : pd * 0.16;
+        prDial.style.setProperty('--open', prNow.toFixed(4));
+        prFill.style.transform = 'scaleX(' + prNow.toFixed(4) + ')';
+        var pct = Math.round(prNow * 100);
+        if (pct !== prLastPct) {
+          prLastPct = pct;
+          prRead.textContent = PR[Math.round(prNow * (PR.length - 1))].stop +
+                               ' · ' + (pct < 3 ? 'closed' : pct + '% open');
+        }
+      }
+    }
+
+    /* ---- clients: base drift plus whatever the last scroll put in ---- */
+    if (clLive && clLanes.length) {
+      scrollVel *= 0.9;
+      var boost = Math.min(7, Math.abs(scrollVel) * 0.2);
+      var skew = Math.max(-2.5, Math.min(2.5, scrollVel * 0.03));
+      for (var c = 0; c < clLanes.length; c++) {
+        var L = clLanes[c];
+        L.x += (reduce ? 0 : (0.34 + boost)) * L.dir * (clHover ? 0.12 : 1);
+        if (L.x <= -L.w) L.x += L.w;
+        if (L.x >= 0) L.x -= L.w;
+        L.el.style.transform =
+          'translate3d(' + L.x.toFixed(2) + 'px,0,0) skewX(' + skew.toFixed(2) + 'deg)';
+      }
+    }
+
+    /* ---- cursor ---- */
+    if (fine) {
+      if (!reduce) { curX += (mx - curX) * 0.28; curY += (my - curY) * 0.28; }
+      else { curX = mx; curY = my; }
+      cur.style.transform = 'translate3d(' + curX.toFixed(1) + 'px,' + curY.toFixed(1) + 'px,0)';
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  /* =============================================================
+     CANVAS INPUT
+     ============================================================= */
+  doc.addEventListener('pointermove', function (e) {
+    mx = e.clientX; my = e.clientY; hasPointer = true;
+  }, { passive:true });
+
+  stage.addEventListener('pointerdown', function (e) {
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+    dragging = true; moved = 0; vX = vY = 0; lerp = 0.22;
+    body.classList.add('dragging', 'grabbing');
+    touched();
+  });
+
+  stage.addEventListener('pointermove', function (e) {
+    if (!ptrs.has(e.pointerId)) return;
+    var prev = ptrs.get(e.pointerId);
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+
+    if (ptrs.size === 1) {
+      var dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+      tX += dx; tY += dy; vX = dx; vY = dy;
+      moved += Math.abs(dx) + Math.abs(dy);
+      clampView();
+    } else if (ptrs.size === 2) {
+      var a = Array.from(ptrs.values());
+      var d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+      var mid = { x:(a[0].x + a[1].x) / 2, y:(a[0].y + a[1].y) / 2 };
+      if (lastDist) zoomAt(mid.x, mid.y, d / lastDist);
+      if (lastMid) { tX += mid.x - lastMid.x; tY += mid.y - lastMid.y; clampView(); }
+      lastDist = d; lastMid = mid; moved += 12;
+    }
+  });
+
+  function endPointer(e) {
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) { lastDist = 0; lastMid = null; }
+    if (ptrs.size === 0) { dragging = false; body.classList.remove('dragging', 'grabbing'); }
+  }
+  stage.addEventListener('pointerup', endPointer);
+  stage.addEventListener('pointercancel', endPointer);
+  stage.addEventListener('pointerleave', function () { hasPointer = false; });
+
+  /* Wheel is the zoom only while the hero holds the viewport. After
+     the release it belongs to the page again, permanently. */
+  stage.addEventListener('wheel', function (e) {
+    if (unlocked) return;
+    e.preventDefault();
+    lerp = 0.18; touched();
+    zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0016));
+  }, { passive:false });
+
+  canvas.addEventListener('click', function (e) {
+    var hit = e.target.closest('.focusable');
+    if (!hit || moved > 6) return;
+    touched();
+    focusOn(hit.parentNode);
+  });
+
+  revealBtn.addEventListener('click', function () {
+    touched();
+    glideTo(tS <= fitScale * 1.06 ? startView() : fitView());
+  });
+
+  addEventListener('keydown', function (e) {
+    /* Tab is an escape hatch: a keyboard visitor is never held in the
+       hero waiting for a gesture they cannot make. */
+    if (e.key === 'Tab') { unlock(); return; }
+    if (unlocked) return;                     // arrows belong to the page now
+    var step = 90, handled = true;
+    switch (e.key) {
+      case 'ArrowLeft':  tX += step; break;
+      case 'ArrowRight': tX -= step; break;
+      case 'ArrowUp':    tY += step; break;
+      case 'ArrowDown':  tY -= step; break;
+      case '+': case '=': zoomAt(vw / 2, vh / 2, 1.25); break;
+      case '-': case '_': zoomAt(vw / 2, vh / 2, 1 / 1.25); break;
+      default: handled = false;
+    }
+    if (!handled) return;
+    e.preventDefault(); lerp = 0.18; clampView(); touched();
+  });
+
+  /* =============================================================
+     SCROLL - fades the canvas out, hands the readout its second job.
+     ============================================================= */
+  var SECTIONS = [
+    { id:'about',    n:'01', label:'About'    },
+    { id:'work',     n:'02', label:'Work'     },
+    { id:'services', n:'03', label:'Services' },
+    { id:'process',  n:'04', label:'Process'  },
+    { id:'clients',  n:'05', label:'Clients'  },
+    { id:'contact',  n:'06', label:'Contact'  }
+  ];
+  var navLinks = [].slice.call(doc.querySelectorAll('#nav a'));
+  var ticking = false;
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      var y = scrollY || pageYOffset;
+      var vhNow = innerHeight;
+      scrollVel = y - lastScrollY;
+      lastScrollY = y;
+      /* Cached here rather than read every frame: the board only moves
+         when the page does. */
+      if (svStage) svRect = svStage.getBoundingClientRect();
+
+      stage.style.opacity = Math.max(0, Math.min(1, 1 - y / (vhNow * 0.6)));
+
+      var wasPast = pastHero;
+      pastHero = y > vhNow * 0.55;
+      if (pastHero !== wasPast) body.classList.toggle('past-hero', pastHero);
+      if (!pastHero) return;
+
+      /* Same instrument, second job: where you are, not how close.
+         Measured from the viewport, not offsetTop - every section's
+         offsetParent is #sheet, so offsetTop is short by one hero. */
+      var mid = vhNow * 0.35, active = SECTIONS[0];
+      for (var i = 0; i < SECTIONS.length; i++) {
+        var el = doc.getElementById(SECTIONS[i].id);
+        if (el && el.getBoundingClientRect().top <= mid) active = SECTIONS[i];
+      }
+      zoomEl.textContent = active.n + ' — ' + active.label;
+
+      var max = doc.documentElement.scrollHeight - vhNow;
+      barEl.style.width = Math.max(2, Math.min(100, max > 0 ? (y / max) * 100 : 0)) + '%';
+
+      for (var j = 0; j < navLinks.length; j++) {
+        navLinks[j].classList.toggle('here', navLinks[j].getAttribute('href') === '#' + active.id);
+      }
+    });
+  }
+  addEventListener('scroll', onScroll, { passive:true });
+
+  /* =============================================================
+     REVEAL ON SCROLL
+     ============================================================= */
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        en.target.classList.add('seen');
+        io.unobserve(en.target);
+      });
+    }, { threshold:0.12, rootMargin:'0px 0px -8% 0px' });
+    [].forEach.call(doc.querySelectorAll('.rise, .ct-ap'), function (el) { io.observe(el); });
+  } else {
+    [].forEach.call(doc.querySelectorAll('.rise, .ct-ap'), function (el) { el.classList.add('seen'); });
+  }
+
+  /* =============================================================
+     SERVICES - the studio floor.
+     The plates drift toward the cursor on the same magnetism the hero
+     shapes use, and opening one zooms it to fill the board. Below the
+     stacking breakpoint the board becomes a stack and the JS steps
+     out of the way entirely.
+     ============================================================= */
+  var svStage = doc.getElementById('sv-stage');
+  var svCards = svStage ? [].slice.call(svStage.querySelectorAll('.sv-card')) : [];
+  var svMag = [], svLive = false, svOpen = null, svFloor = false;
+
+  function svMeasure() {
+    /* Stacked layout has no board to drift on, so drop the magnets. */
+    svFloor = innerWidth > 860;
+    svMag = [];
+    if (!svFloor || !svStage) return;
+    var box = svStage.getBoundingClientRect();
+    svRect = box;
+    for (var i = 0; i < svCards.length; i++) {
+      var r = svCards[i].getBoundingClientRect();
+      svMag.push({
+        inner: svCards[i].firstElementChild,
+        card: svCards[i],
+        cx: r.left - box.left + r.width / 2,
+        cy: r.top - box.top + r.height / 2
+      });
+    }
+  }
+
+  function svSet(card) {
+    svOpen = card;
+    svStage.classList.toggle('open', !!card);
+    for (var i = 0; i < svCards.length; i++) {
+      var on = svCards[i] === card;
+      svCards[i].classList.toggle('active', on);
+      svCards[i].querySelector('.sv-face').setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (on) svCards[i].firstElementChild.style.transform = '';
+    }
+  }
+
+  if (svStage) {
+    svStage.addEventListener('click', function (e) {
+      if (e.target.closest('.sv-close')) { svSet(null); return; }
+      var face = e.target.closest('.sv-face');
+      if (!face) return;
+      var card = face.closest('.sv-card');
+      svSet(svOpen === card ? null : card);
+    });
+    addEventListener('keydown', function (e) { if (e.key === 'Escape' && svOpen) svSet(null); });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { svLive = es[0].isIntersecting; },
+        { rootMargin: '120px' }).observe(svStage);
+    } else { svLive = true; }
+  }
+
+  /* =============================================================
+     PROCESS - the aperture as an instrument.
+     One value drives everything: 0 is shut, 1 is wide. The blades, the
+     sweep, the f-stop readout and the track all read from it, so the
+     control and the graphic can never disagree.
+     ============================================================= */
+  var PR = [
+    { name:'Brief',    stop:'f/16', copy:'We interrogate it before we accept it. Half the work is agreeing on the real problem.' },
+    { name:'Insight',  stop:'f/8',  copy:'Category, audience, culture. We are after the one true thing nobody has said out loud yet.' },
+    { name:'Idea',     stop:'f/4',  copy:'A single platform, pressure-tested against every channel it will have to survive.' },
+    { name:'Make',     stop:'f/2',  copy:'Produced in-house, so the idea that was sold is the idea that ships.' },
+    { name:'Measure',  stop:'f/1.4',copy:'What moved, what did not, and what changes next quarter. In writing.' }
+  ];
+
+  var prDial  = doc.getElementById('pr-dial');
+  var prTrack = doc.getElementById('pr-track');
+  var prFill  = doc.getElementById('pr-fill');
+  var prRead  = doc.getElementById('pr-read');
+  var prNum   = doc.getElementById('pr-num');
+  var prName  = doc.getElementById('pr-name');
+  var prCopy  = doc.getElementById('pr-copy');
+  var prHint  = doc.getElementById('pr-hint');
+  var prNotch = prTrack ? [].slice.call(prTrack.querySelectorAll('.pr-notch')) : [];
+  var prShots = doc.getElementById('pr-win') ? [].slice.call(doc.getElementById('pr-win').children) : [];
+  var prPrev  = doc.getElementById('pr-prev');
+  var prNext  = doc.getElementById('pr-next');
+
+  var prStep = 0, prTarget = 0, prNow = 0;   // target/now are the 0..1 opening
+  var prDragging = false, prTouchedIt = false, prDemo = false;
+
+  function prStage(i, fromScrub) {
+    i = Math.max(0, Math.min(PR.length - 1, i));
+    if (i === prStep && fromScrub) return;
+    prStep = i;
+    var s = PR[i];
+
+    /* Only the words change between stages, so only the words move. */
+    [prNum, prName, prCopy].forEach(function (el) { el.classList.add('out'); });
+    setTimeout(function () {
+      prNum.textContent = 'Stage 0' + (i + 1) + ' of 05';
+      prName.textContent = s.name;
+      prCopy.textContent = s.copy;
+      [prNum, prName, prCopy].forEach(function (el) { el.classList.remove('out'); });
+    }, reduce ? 0 : 220);
+
+    for (var k = 0; k < prNotch.length; k++) {
+      prNotch[k].classList.toggle('now', k === i);
+      prNotch[k].classList.toggle('done', k < i);
+    }
+    for (var j = 0; j < prShots.length; j++) prShots[j].classList.toggle('on', j === i);
+    prPrev.disabled = i === 0;
+    prNext.disabled = i === PR.length - 1;
+    if (!fromScrub) prTarget = i / (PR.length - 1);
+  }
+
+  function prGo(i) { prTouched(); prStage(i); }
+  function prTouched() {
+    if (prTouchedIt) return;
+    prTouchedIt = true;
+    prHint.textContent = 'Five stages, one frame';
+  }
+
+  if (prTrack) {
+    prTrack.addEventListener('click', function (e) {
+      var n = e.target.closest('.pr-notch');
+      if (n) prGo(+n.dataset.i);
+    });
+    prPrev.addEventListener('click', function () { prGo(prStep - 1); });
+    prNext.addEventListener('click', function () { prGo(prStep + 1); });
+
+    prTrack.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      prGo(prStep + d);
+      prNotch[prStep].focus();
+    });
+
+    /* Scrubbing runs the opening continuously and snaps to the nearest
+       stage on release - the value is live, the content is not. */
+    function prScrub(clientX) {
+      var r = prTrack.getBoundingClientRect();
+      var p = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+      prTarget = p;
+      prStage(Math.round(p * (PR.length - 1)), true);
+    }
+    prTrack.addEventListener('pointerdown', function (e) {
+      prDragging = true; prTouched();
+      try { prTrack.setPointerCapture(e.pointerId); } catch (err) {}
+      body.classList.add('grabbing');
+      prScrub(e.clientX);
+    });
+    prTrack.addEventListener('pointermove', function (e) { if (prDragging) prScrub(e.clientX); });
+    function prEnd() {
+      if (!prDragging) return;
+      prDragging = false;
+      body.classList.remove('grabbing');
+      prTarget = prStep / (PR.length - 1);    // snap the opening, leave the words
+    }
+    prTrack.addEventListener('pointerup', prEnd);
+    prTrack.addEventListener('pointercancel', prEnd);
+
+    /* One unprompted step on first sight, so the control reads as a
+       control rather than a diagram. */
+    if ('IntersectionObserver' in window && !reduce) {
+      var prIo = new IntersectionObserver(function (es) {
+        if (!es[0].isIntersecting || prDemo) return;
+        prDemo = true;
+        prIo.disconnect();
+        setTimeout(function () { if (!prTouchedIt) prStage(1); }, 900);
+      }, { threshold: 0.4 });
+      prIo.observe(prTrack);
+    }
+    prStage(0);
+  }
+
+  /* =============================================================
+     CLIENTS - the room, running on the page's momentum.
+     Two rows, opposite directions, base speed plus whatever the
+     visitor's last scroll gesture put into them.
+     ============================================================= */
+  var CLIENTS = [
+    ['Halcyon Air','Aviation'], ['Meridian Bank','Finance'], ['Norlake','Consumer goods'],
+    ['Sunbelt Foods','FMCG'],   ['Orbit','Mobility'],        ['The Ridge','Hospitality'],
+    ['Cassini Labs','Health'],  ['Verdance','Energy'],       ['Ninth Street','Retail'],
+    ['Atlas Freight','Logistics'], ['Pallas Media','Publishing'], ['Corterra','Property']
+  ];
+
+  var clRows = doc.getElementById('cl-rows');
+  var clLanes = [], clLive = false, clHover = false;
+
+  function clBuild() {
+    if (!clRows) return;
+    var rows = [].slice.call(clRows.children);
+    rows.forEach(function (row, ri) {
+      /* The second lane starts half a set along so the two never line
+         up into one readable column. */
+      var order = ri === 0 ? CLIENTS : CLIENTS.slice(6).concat(CLIENTS.slice(0, 6));
+      var html = order.map(function (c) {
+        return '<span class="cl-item"><span class="n">' + c[0] + '</span>' +
+               '<span class="pip" aria-hidden="true"></span>' +
+               '<span class="s micro-meta">' + c[1] + '</span></span>';
+      }).join('');
+      /* Doubled, so translating by exactly one set's width loops with
+         no seam to hide. */
+      row.innerHTML = html + html;
+      clLanes.push({ el: row, dir: +row.dataset.dir, x: 0, w: 0 });
+    });
+    clMeasure();
+  }
+
+  function clMeasure() {
+    for (var i = 0; i < clLanes.length; i++) {
+      clLanes[i].w = clLanes[i].el.scrollWidth / 2;
+      if (clLanes[i].w < 1) clLanes[i].w = 1;
+      if (clLanes[i].dir > 0 && clLanes[i].x === 0) clLanes[i].x = -clLanes[i].w;
+    }
+  }
+
+  if (clRows) {
+    clBuild();
+    clRows.addEventListener('pointerenter', function () { clHover = true; });
+    clRows.addEventListener('pointerleave', function () { clHover = false; });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { clLive = es[0].isIntersecting; },
+        { rootMargin: '80px' }).observe(clRows);
+    } else { clLive = true; }
+  }
+
+  /* =============================================================
+     CONTACT - the brief composer.
+     Every chip rewrites the mailto, so the sentence on the page and
+     the mail that leaves are the same thing.
+     ============================================================= */
+  var BRIEF = {
+    what: ['brand strategy','a campaign','content & production','media & performance','a website'],
+    why:  ['a launch','a relaunch','a new market','a category fight','an always-on year'],
+    when: ['this quarter','next quarter','as soon as you can','a date we have not set']
+  };
+  var briefPick = { what:0, why:0, when:0 };
+  var ctSend = doc.getElementById('ct-send');
+  var ctLive = doc.getElementById('ct-live');
+  var ctChips = [].slice.call(doc.querySelectorAll('.ct-chip'));
+
+  function briefText() {
+    return 'I need ' + BRIEF.what[briefPick.what] +
+           ' for ' + BRIEF.why[briefPick.why] +
+           ', and I want to start ' + BRIEF.when[briefPick.when] + '.';
+  }
+
+  function briefSync() {
+    if (!ctSend) return;
+    var subject = 'Brief: ' + BRIEF.what[briefPick.what] + ' for ' + BRIEF.why[briefPick.why];
+    var lines = briefText() + '\n\n' +
+      'Discipline: ' + BRIEF.what[briefPick.what] + '\n' +
+      'Occasion:   ' + BRIEF.why[briefPick.why] + '\n' +
+      'Timing:     ' + BRIEF.when[briefPick.when] + '\n\n' +
+      '— tell us the problem here —\n\n';
+    ctSend.href = 'mailto:hello@blue.agency?subject=' + encodeURIComponent(subject) +
+                  '&body=' + encodeURIComponent(lines);
+    if (ctLive) ctLive.textContent = 'Opens your mail app with: “' + subject + '”';
+  }
+
+  ctChips.forEach(function (chip) {
+    var key = chip.dataset.chip, word = chip.querySelector('.w');
+    chip.setAttribute('aria-label', 'Change: ' + BRIEF[key][briefPick[key]]);
+    chip.addEventListener('click', function () {
+      briefPick[key] = (briefPick[key] + 1) % BRIEF[key].length;
+      chip.classList.add('turn');
+      setTimeout(function () {
+        word.textContent = BRIEF[key][briefPick[key]];
+        chip.classList.remove('turn');
+        chip.setAttribute('aria-label', 'Change: ' + BRIEF[key][briefPick[key]]);
+        briefSync();
+      }, reduce ? 0 : 180);
+    });
+  });
+  briefSync();
+
+  /* =============================================================
+     NAV, MENU, AND THE LOOP BACK
+     ============================================================= */
+  var menu = doc.getElementById('menu');
+  var menuBtn = doc.getElementById('menu-btn');
+  var menuLabel = doc.getElementById('menu-label');
+
+  function setMenu(open) {
+    body.classList.toggle('menu-open', open);
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    menuLabel.textContent = open ? 'Close' : 'Menu';
+  }
+  menuBtn.addEventListener('click', function () { setMenu(!body.classList.contains('menu-open')); });
+  addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+
+  /* Every in-page link releases the lock first, then travels. Without
+     this a nav click inside the hero would silently do nothing. */
+  doc.addEventListener('click', function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    var target = id ? doc.getElementById(id) : null;
+    if (!target && id !== 'top') return;
+    e.preventDefault();
+    setMenu(false);
+    unlock();
+    requestAnimationFrame(function () {
+      if (id === 'top') scrollTo({ top:0, behavior:reduce ? 'auto' : 'smooth' });
+      else target.scrollIntoView({ behavior:reduce ? 'auto' : 'smooth', block:'start' });
+    });
+  });
+
+  doc.getElementById('to-top').addEventListener('click', function () {
+    scrollTo({ top:0, behavior:reduce ? 'auto' : 'smooth' });
+    /* Land at the top, then dive back into the letterform the visit
+       started in. The site ends where it began, one notch tighter. */
+    setTimeout(function () { measure(); glideTo(startView()); }, reduce ? 0 : 700);
+  });
+
+  /* Cursor applies only once the script is running, so a failed load
+     never leaves a visitor with no pointer at all. */
+  if (fine) {
+    body.classList.add('has-cursor');
+    doc.addEventListener('pointerover', function (e) {
+      if (e.target.closest('a, button, .focusable, .cl-cell')) body.classList.add('hovering');
+    });
+    doc.addEventListener('pointerout', function (e) {
+      if (e.target.closest('a, button, .focusable, .cl-cell')) body.classList.remove('hovering');
+    });
+  }
+
+  /* =============================================================
+     RESIZE
+     ============================================================= */
+  var rt;
+  addEventListener('resize', function () {
+    railMeasure();
+    svMeasure();
+    clMeasure();
+    clearTimeout(rt);
+    rt = setTimeout(onScroll, 120);
+
+    /* An orientation flip swaps the whole composition, so re-fit
+       rather than preserving a viewpoint that no longer exists. */
+    if (pickLayout() !== layoutName) {
+      build(pickLayout());
+      measure();
+      var f = fitView();
+      tS = f.s; tX = f.x; tY = f.y;
+      clampView();
+      return;
+    }
+    var relX = (vw / 2 - tX) / tS, relY = (vh / 2 - tY) / tS;   // keep the same spot in view
+    var oldFit = fitScale;
+    measure();
+    tS = tS * (fitScale / oldFit);
+    tX = vw / 2 - relX * tS;
+    tY = vh / 2 - relY * tS;
+    clampView();
+  });
+
+  /* =============================================================
+     BOOT - hold until Poppins is in, so the composed layout does not
+     reflow from fallback metrics under the visitor.
+     ============================================================= */
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    if (!fine) hintEl.textContent = 'Drag to explore · Pinch to pull back';
+    build(pickLayout());
+    measure();
+    railMeasure();
+    railStatus();
+    svMeasure();
+    clMeasure();
+    if (prDial && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { prLive = es[0].isIntersecting; },
+        { rootMargin:'120px' }).observe(prDial);
+    } else { prLive = true; }
+    var v = reduce ? fitView() : startView();
+    tS = cS = v.s; tX = cX = v.x; tY = cY = v.y;
+    body.classList.add('ready');
+    if (reduce) { touched(); unlock(); }
+    onScroll();
+    requestAnimationFrame(frame);
+  }
+
+  if (doc.fonts && doc.fonts.load) {
+    doc.fonts.load('900 1em Poppins').then(start, start);
+    doc.fonts.ready.then(function () { railMeasure(); railStatus(); svMeasure(); clMeasure(); });
+    setTimeout(start, 700);
+  } else {
+    addEventListener('load', start);
+  }
+})();
+</script>
+
+</body>
+</html>

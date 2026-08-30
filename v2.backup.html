@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>BLUE — The Canvas (V2)</title>
+<link rel="icon" href="blue-logo.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;900&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: { navy: '#0F437F', orange: '#F9AF1A' },
+      fontFamily: { sans: ['Poppins', 'system-ui', 'sans-serif'] }
+    } }
+  }
+</script>
+
+<style>
+  :root{
+    --navy:#0F437F;
+    --orange:#F9AF1A;
+    --glide:cubic-bezier(.16,1,.3,1);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; background:#fff; overflow:hidden; }
+  body{
+    font-family:'Poppins',system-ui,-apple-system,sans-serif;
+    color:var(--navy);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* ---------------------------------------------------------------
+     STAGE + CANVAS
+     One transformed layer carries every object, so panning 30 things
+     costs the same as panning one. Objects stay DOM (not canvas 2D)
+     so the type renders crisply and remains real text.
+     --------------------------------------------------------------- */
+  #stage{
+    position:fixed; inset:0; overflow:hidden;
+    touch-action:none; user-select:none; -webkit-user-select:none;
+  }
+  @media (pointer:fine){ #stage{ cursor:none; } }
+
+  #canvas{
+    position:absolute; top:0; left:0;
+    transform-origin:0 0;
+    will-change:transform;
+    opacity:0; transition:opacity .7s ease-out;
+  }
+  body.ready #canvas{ opacity:1; }
+
+  .obj{ position:absolute; }
+  .obj > .in{ will-change:transform; }
+
+  .word{
+    font-weight:900; line-height:.85; letter-spacing:-.03em;
+    color:var(--navy); white-space:nowrap;
+  }
+  .o-disc{ border-radius:50%; background:var(--orange); }
+  .o-ring{ border-radius:50%; border:3px solid var(--orange); }
+  .o-wedge{ border-radius:100% 0 0 0; background:var(--orange); transform:rotate(-12deg); }
+
+  /* Outlined placeholders - real work drops in here later. */
+  .plate{
+    border:2px solid rgba(15,67,127,.22);
+    display:flex; align-items:flex-end; justify-content:space-between;
+    padding:18px 22px; font-size:26px; font-weight:500;
+    letter-spacing:.24em; color:rgba(15,67,127,.4);
+  }
+  .plate .dot{ width:14px; height:14px; border-radius:50%; background:var(--orange); }
+
+  /* Only legible once you have zoomed well in - the reward for
+     exploring rather than pressing the button. */
+  .micro{
+    font-size:26px; font-weight:500; letter-spacing:.14em;
+    color:rgba(15,67,127,.45); white-space:nowrap; text-transform:uppercase;
+  }
+
+  .focusable{ cursor:none; }
+
+  /* ---------------------------------------------------------------
+     WORKSPACE GRID - fades in only while you are dragging.
+     --------------------------------------------------------------- */
+  #grid{
+    position:fixed; inset:0; pointer-events:none; z-index:1;
+    opacity:0; transition:opacity .4s ease;
+    background-image:
+      linear-gradient(to right, rgba(15,67,127,.10) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15,67,127,.10) 1px, transparent 1px);
+  }
+  body.dragging #grid{ opacity:1; }
+
+  #cross{ position:fixed; inset:0; pointer-events:none; z-index:2; opacity:0;
+          transition:opacity .4s ease; }
+  body.dragging #cross{ opacity:1; }
+  #cross i{ position:absolute; background:rgba(249,175,26,.5); display:block; }
+  #cross .h{ left:0; right:0; height:1px; }
+  #cross .v{ top:0; bottom:0; width:1px; }
+
+  /* ---------------------------------------------------------------
+     CUSTOM CURSOR - the logo's aperture, as a pointer.
+     --------------------------------------------------------------- */
+  #cur{
+    position:fixed; top:0; left:0; z-index:60; pointer-events:none;
+    width:34px; height:34px; margin:-17px 0 0 -17px;
+    border:2px solid var(--orange); border-radius:50%;
+    transition:width .22s var(--glide), height .22s var(--glide),
+               margin .22s var(--glide), background-color .22s ease;
+  }
+  body.grabbing #cur{ width:20px; height:20px; margin:-10px 0 0 -10px;
+                      background-color:rgba(249,175,26,.35); }
+  body.hovering #cur{ width:60px; height:60px; margin:-30px 0 0 -30px; }
+  @media (pointer:coarse){ #cur{ display:none; } }
+
+  /* ---------------------------------------------------------------
+     FIXED UI - never pans, so the brand is never lost mid-explore.
+     --------------------------------------------------------------- */
+  .ui{ position:fixed; z-index:40; }
+
+  /* Small UI text goes navy-on-navy when a letterform passes under it.
+     A local chip fixes that without a full-width scrim, which washed
+     the bottom of PICTURE and read as an unintended vignette.
+     The logo needs none - its JPG already carries a white ground. */
+  .chip{
+    background:rgba(255,255,255,.86);
+    -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+    border-radius:999px; padding:8px 15px;
+  }
+
+  /* Same crop maths as V1: ink is 969x510 at (264,494) in a 1500 square.
+     Margin percentages resolve against width on every side. */
+  .logo-crop{ position:relative; overflow:hidden; aspect-ratio:969/510; }
+  .logo-crop img{
+    display:block; max-width:none;
+    width:154.799%; margin-left:-27.245%; margin-top:-50.980%;
+  }
+
+  .meta{ font-size:11px; font-weight:500; letter-spacing:.28em; text-transform:uppercase; }
+
+  #bar{ width:86px; height:2px; background:rgba(15,67,127,.14); position:relative; }
+  #bar i{ position:absolute; top:0; bottom:0; left:0; background:var(--orange); width:0; }
+
+  #reveal{
+    display:inline-flex; align-items:center; gap:12px;
+    background:var(--orange); color:var(--navy);
+    border:0; border-radius:999px; padding:15px 26px;
+    font-family:inherit; font-size:11px; font-weight:600;
+    letter-spacing:.24em; text-transform:uppercase; cursor:pointer;
+    box-shadow:0 8px 30px rgba(15,67,127,.16);
+    transition:transform .3s var(--glide), box-shadow .3s ease;
+  }
+  #reveal:hover{ transform:translateY(-2px); box-shadow:0 14px 38px rgba(15,67,127,.22); }
+  #reveal:focus-visible{ outline:3px solid var(--navy); outline-offset:3px; }
+  #reveal .ic{
+    width:15px; height:15px; border:2px solid var(--navy); border-radius:50%;
+    flex:none; transition:transform .4s var(--glide);
+  }
+  body.at-fit #reveal .ic{ transform:scale(.45); }
+
+  #hint{ transition:opacity .6s ease, transform .6s var(--glide); }
+  body.touched #hint{ opacity:0 !important; transform:translateY(10px); }
+
+  .fade-in{ opacity:0; transform:translateY(10px); }
+  body.ready .fade-in{
+    opacity:1; transform:none;
+    transition:opacity .8s ease-out, transform .8s var(--glide);
+  }
+  body.ready .d1{ transition-delay:.25s; }
+  body.ready .d2{ transition-delay:.4s;  }
+  body.ready .d3{ transition-delay:.55s; }
+
+  @media (max-width:640px){
+    #reveal{ padding:13px 20px; font-size:10px; letter-spacing:.18em; }
+    .meta{ font-size:10px; letter-spacing:.2em; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    #canvas,.fade-in,#cur,#reveal{ transition:none !important; }
+    .fade-in{ opacity:1; transform:none; }
+  }
+</style>
+</head>
+
+<body class="bg-white">
+
+<div id="stage">
+  <div id="canvas"></div>
+</div>
+
+<div id="grid"></div>
+<div id="cross"><i class="h"></i><i class="v"></i></div>
+<div id="cur"></div>
+
+<!-- logo ------------------------------------------------------- -->
+<header class="ui top-0 left-0 p-6 md:p-9">
+  <a href="index.html" class="fade-in d1 block logo-crop" style="width:clamp(104px,11vw,150px)"
+     aria-label="BLUE Advertising Agency — back to V1">
+    <img src="blue-logo.jpg" alt="BLUE Advertising Agency">
+  </a>
+</header>
+
+<!-- zoom readout ------------------------------------------------ -->
+<div class="ui top-0 right-0 p-6 md:p-9 flex flex-col items-end gap-2 fade-in d2 chip" style="margin:18px 18px auto auto;padding:12px 16px">
+  <a href="index.html" class="meta text-navy/45 hover:text-navy transition-colors">V1 &rarr;</a>
+  <div class="meta text-navy/70" id="zoom">1.00&times;</div>
+  <div id="bar"><i></i></div>
+</div>
+
+<!-- reveal control ---------------------------------------------- -->
+<div class="ui bottom-0 left-1/2 pb-7 md:pb-9" style="transform:translateX(-50%)">
+  <div class="fade-in d3 flex flex-col items-center gap-5">
+    <div id="hint" class="meta text-navy/45 whitespace-nowrap chip">Drag to explore &nbsp;·&nbsp; Scroll to zoom</div>
+    <button id="reveal" type="button">
+      <span class="ic"></span><span id="reveal-label">See the bigger picture</span>
+    </button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stage  = document.getElementById('stage');
+  var canvas = document.getElementById('canvas');
+  var grid   = document.getElementById('grid');
+  var crossH = document.querySelector('#cross .h');
+  var crossV = document.querySelector('#cross .v');
+  var cur    = document.getElementById('cur');
+  var zoomEl = document.getElementById('zoom');
+  var barEl  = document.querySelector('#bar i');
+  var revealBtn = document.getElementById('reveal');
+  var revealLbl = document.getElementById('reveal-label');
+
+  /* -------------------------------------------------------------
+     THE COMPOSITION
+     World units. Zoomed out this is a designed poster; zoomed in you
+     are inside a letterform and none of it reads. Data-driven so the
+     layout can be retuned without touching the engine.
+     ------------------------------------------------------------- */
+  /* Two compositions, not one scaled down. A landscape canvas fitted to
+     a portrait phone lands as a small strip stranded in a tall screen
+     and the payoff falls flat, so portrait gets its own arrangement. */
+  var LANDSCAPE = { W:2600, H:1520, FOCUS:{ x:420, y:1080 }, OBJECTS:[
+    { t:'word', s:'SEE',     x:180,  y:120,  size:250 },
+    { t:'word', s:'THE',     x:740,  y:120,  size:250 },
+    { t:'word', s:'BIGGER',  x:180,  y:420,  size:430 },
+    { t:'word', s:'PICTURE', x:180,  y:850,  size:570 },
+
+    { t:'disc',  x:2030, y:110,  size:340 },
+    { t:'ring',  x:1760, y:880,  size:520 },
+    { t:'wedge', x:30,   y:600,  size:190 },
+
+    { t:'plate', x:2150, y:600,  w:340, h:230, n:'01' },
+    { t:'plate', x:60,   y:1360, w:300, h:120, n:'02' },
+    { t:'plate', x:1330, y:30,   w:300, h:110, n:'03' },
+
+    /* Kept in open canvas, never inside a letterform - text sitting in a
+       counter gets sliced by the glyph and reads as a rendering fault. */
+    { t:'micro', s:'not the whole thing yet', x:700,  y:1390 },
+    { t:'micro', s:'still a fragment',        x:1250, y:300  },
+    { t:'micro', s:'keep going',              x:1850, y:1400 },
+    { t:'micro', s:'almost',                  x:2200, y:480  }
+  ]};
+
+  var PORTRAIT = { W:1400, H:2050, FOCUS:{ x:230, y:1250 }, OBJECTS:[
+    { t:'word', s:'SEE',     x:110, y:170,  size:300 },
+    { t:'word', s:'THE',     x:110, y:450,  size:300 },
+    { t:'word', s:'BIGGER',  x:110, y:790,  size:330 },
+    { t:'word', s:'PICTURE', x:110, y:1130, size:300 },
+
+    { t:'disc',  x:1020, y:120,  size:270 },
+    { t:'ring',  x:820,  y:1400, size:420 },
+    { t:'wedge', x:20,   y:640,  size:150 },
+
+    { t:'plate', x:980, y:520,  w:300, h:200, n:'01' },
+    { t:'plate', x:110, y:1560, w:280, h:120, n:'02' },
+    { t:'plate', x:110, y:1790, w:380, h:140, n:'03' },
+
+    { t:'micro', s:'still a fragment',        x:700,  y:760  },
+    { t:'micro', s:'not the whole thing yet', x:110,  y:1490 },
+    { t:'micro', s:'keep going',              x:820,  y:1960 },
+    { t:'micro', s:'almost',                  x:1010, y:430  }
+  ]};
+
+  /* Explicit stacking, not DOM order: orange never sits on navy type. */
+  var Z = { disc:1, ring:1, wedge:1, plate:2, word:3, micro:4 };
+
+  var W, H, FOCUS;
+  var magnets = [];   // shapes + plates drift toward the cursor; words do not
+  var layoutName = '';
+
+  function pickLayout() { return innerWidth / innerHeight < 0.92 ? 'p' : 'l'; }
+
+  function build(name) {
+    var L = name === 'p' ? PORTRAIT : LANDSCAPE;
+    layoutName = name;
+    W = L.W; H = L.H; FOCUS = L.FOCUS;
+    canvas.innerHTML = '';
+    magnets = [];
+    L.OBJECTS.forEach(makeObject);
+  }
+
+  function makeObject(o) {
+    var el = document.createElement('div');
+    el.className = 'obj';
+    el.style.left = o.x + 'px';
+    el.style.top  = o.y + 'px';
+    el.style.zIndex = Z[o.t] || 1;
+
+    var inner = document.createElement('div');
+    inner.className = 'in';
+
+    if (o.t === 'word') {
+      inner.className += ' word focusable';
+      inner.style.fontSize = o.size + 'px';
+      inner.textContent = o.s;
+    } else if (o.t === 'micro') {
+      inner.className += ' micro';
+      inner.textContent = o.s;
+    } else if (o.t === 'plate') {
+      inner.className += ' plate focusable';
+      inner.style.width = o.w + 'px';
+      inner.style.height = o.h + 'px';
+      inner.innerHTML = '<span>' + o.n + '</span><span class="dot"></span>';
+      magnets.push(el);
+    } else {
+      inner.className += ' o-' + o.t;
+      inner.style.width = o.size + 'px';
+      inner.style.height = o.size + 'px';
+      magnets.push(el);
+    }
+
+    el.appendChild(inner);
+    canvas.appendChild(el);
+  }
+
+  /* -------------------------------------------------------------
+     VIEW STATE - target vs current, lerped every frame.
+     ------------------------------------------------------------- */
+  var vw, vh, fitScale;
+  var tX = 0, tY = 0, tS = 1;      // where we are heading
+  var cX = 0, cY = 0, cS = 1;      // where we are
+  var vX = 0, vY = 0;              // release momentum
+  var lerp = 0.18;
+
+  var ptrs = new Map(), dragging = false, moved = 0, lastDist = 0, lastMid = null;
+  var mx = -999, my = -999, hasPointer = false;
+  var curX = 0, curY = 0;
+
+  function measure() {
+    vw = innerWidth; vh = innerHeight;
+    var pad = Math.min(vw, vh) * 0.06;
+    fitScale = Math.min((vw - pad * 2) / W, (vh - pad * 2) / H);
+  }
+
+  function fitView()  { return { s:fitScale, x:(vw - W * fitScale) / 2, y:(vh - H * fitScale) / 2 }; }
+  function startView(){
+    var s = fitScale * 3.4;                 // same factor as V1's pull-back
+    return { s:s, x: vw / 2 - FOCUS.x * s, y: vh / 2 - FOCUS.y * s };
+  }
+
+  /* Keep some canvas on screen - you can roam, but not get lost. */
+  function clampView() {
+    var wW = W * tS, wH = H * tS, gx = vw * 0.2, gy = vh * 0.2;
+    if (wW <= vw) tX = (vw - wW) / 2; else tX = Math.min(gx, Math.max(vw - wW - gx, tX));
+    if (wH <= vh) tY = (vh - wH) / 2; else tY = Math.min(gy, Math.max(vh - wH - gy, tY));
+  }
+
+  function zoomAt(px, py, factor) {
+    var ns = Math.min(fitScale * 8, Math.max(fitScale * 0.8, tS * factor));
+    var r = ns / tS;
+    tX = px - (px - tX) * r;
+    tY = py - (py - tY) * r;
+    tS = ns;
+    clampView();
+  }
+
+  /* A programmatic move eases slower than a drag - it should read as
+     the canvas travelling, not snapping. */
+  function glideTo(v) { tS = v.s; tX = v.x; tY = v.y; clampView(); lerp = 0.055; }
+
+  function focusOn(el) {
+    var w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
+    var s = Math.min(vw * 0.78 / w, vh * 0.7 / h);
+    s = Math.min(fitScale * 8, Math.max(fitScale * 0.8, s));
+    glideTo({ s:s, x: vw / 2 - (el.offsetLeft + w / 2) * s, y: vh / 2 - (el.offsetTop + h / 2) * s });
+  }
+
+  function touched() { document.body.classList.add('touched'); }
+
+  /* -------------------------------------------------------------
+     FRAME
+     ------------------------------------------------------------- */
+  function frame() {
+    if (reduce) {
+      cX = tX; cY = tY; cS = tS;
+    } else {
+      if (!dragging && (Math.abs(vX) > 0.06 || Math.abs(vY) > 0.06)) {
+        tX += vX; tY += vY; vX *= 0.93; vY *= 0.93; clampView();
+      }
+      cX += (tX - cX) * lerp;
+      cY += (tY - cY) * lerp;
+      cS += (tS - cS) * lerp;
+    }
+
+    canvas.style.transform =
+      'translate3d(' + cX.toFixed(2) + 'px,' + cY.toFixed(2) + 'px,0) scale(' + cS.toFixed(5) + ')';
+
+    /* grid pans with the content and scales with zoom, but its lines
+       stay 1px - a scaled grid would thicken into stripes. */
+    if (dragging) {
+      var cell = 80 * cS;
+      while (cell < 26) cell *= 2;
+      while (cell > 420) cell /= 2;
+      grid.style.backgroundSize = cell + 'px ' + cell + 'px';
+      grid.style.backgroundPosition = (cX % cell) + 'px ' + (cY % cell) + 'px';
+      crossH.style.top = my + 'px';
+      crossV.style.left = mx + 'px';
+    }
+
+    /* magnetism - shapes and plates only. Heavy type stays anchored. */
+    if (hasPointer && !reduce) {
+      var wx = (mx - cX) / cS, wy = (my - cY) / cS, R = 780;
+      for (var i = 0; i < magnets.length; i++) {
+        var el = magnets[i], inner = el.firstChild;
+        var ox = el.offsetLeft + inner.offsetWidth / 2;
+        var oy = el.offsetTop + inner.offsetHeight / 2;
+        var dx = wx - ox, dy = wy - oy;
+        var d = Math.hypot(dx, dy);
+        if (d > R || d < 0.001) { inner.style.transform = ''; continue; }
+        var pull = 26 * (1 - d / R);
+        var tx = (dx / d) * pull, ty = (dy / d) * pull;
+        inner.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px)' +
+                                (el.querySelector('.o-wedge') ? ' rotate(-12deg)' : '');
+      }
+    }
+
+    if (!reduce) { curX += (mx - curX) * 0.28; curY += (my - curY) * 0.28; }
+    else { curX = mx; curY = my; }
+    cur.style.transform = 'translate3d(' + curX.toFixed(1) + 'px,' + curY.toFixed(1) + 'px,0)';
+
+    /* 1.00x IS the whole picture - the readout and the payoff agree. */
+    var rel = cS / fitScale;
+    zoomEl.textContent = rel.toFixed(2) + '×';
+    barEl.style.width = Math.max(2, Math.min(100, (rel - 0.8) / (8 - 0.8) * 100)) + '%';
+
+    var atFit = Math.abs(tS - fitScale) < fitScale * 0.06;
+    document.body.classList.toggle('at-fit', atFit);
+    revealLbl.textContent = atFit ? 'Dive back in' : 'See the bigger picture';
+
+    requestAnimationFrame(frame);
+  }
+
+  /* -------------------------------------------------------------
+     INPUT
+     ------------------------------------------------------------- */
+  stage.addEventListener('pointerdown', function (e) {
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+    dragging = true; moved = 0; vX = vY = 0; lerp = 0.22;
+    document.body.classList.add('dragging', 'grabbing');
+    touched();
+  });
+
+  stage.addEventListener('pointermove', function (e) {
+    mx = e.clientX; my = e.clientY; hasPointer = true;
+    if (!ptrs.has(e.pointerId)) return;
+
+    var prev = ptrs.get(e.pointerId);
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+
+    if (ptrs.size === 1) {
+      var dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+      tX += dx; tY += dy; vX = dx; vY = dy;
+      moved += Math.abs(dx) + Math.abs(dy);
+      clampView();
+    } else if (ptrs.size === 2) {
+      var a = Array.from(ptrs.values());
+      var d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+      var mid = { x:(a[0].x + a[1].x) / 2, y:(a[0].y + a[1].y) / 2 };
+      if (lastDist) zoomAt(mid.x, mid.y, d / lastDist);
+      if (lastMid) { tX += mid.x - lastMid.x; tY += mid.y - lastMid.y; clampView(); }
+      lastDist = d; lastMid = mid; moved += 12;
+    }
+  });
+
+  function endPointer(e) {
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) { lastDist = 0; lastMid = null; }
+    if (ptrs.size === 0) {
+      dragging = false;
+      document.body.classList.remove('dragging', 'grabbing');
+    }
+  }
+  stage.addEventListener('pointerup', endPointer);
+  stage.addEventListener('pointercancel', endPointer);
+  stage.addEventListener('pointerleave', function () { hasPointer = false; });
+
+  stage.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    lerp = 0.18; touched();
+    zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0016));
+  }, { passive:false });
+
+  /* click-to-focus, suppressed if the pointer was actually dragging */
+  canvas.addEventListener('click', function (e) {
+    var hit = e.target.closest('.focusable');
+    if (!hit || moved > 6) return;
+    touched();
+    focusOn(hit.parentNode);
+  });
+
+  canvas.addEventListener('pointerover', function (e) {
+    if (e.target.closest('.focusable')) document.body.classList.add('hovering');
+  });
+  canvas.addEventListener('pointerout', function (e) {
+    if (e.target.closest('.focusable')) document.body.classList.remove('hovering');
+  });
+
+  revealBtn.addEventListener('click', function () {
+    touched();
+    var atFit = Math.abs(tS - fitScale) < fitScale * 0.06;
+    glideTo(atFit ? startView() : fitView());
+  });
+
+  addEventListener('keydown', function (e) {
+    var step = 90, handled = true;
+    switch (e.key) {
+      case 'ArrowLeft':  tX += step; break;
+      case 'ArrowRight': tX -= step; break;
+      case 'ArrowUp':    tY += step; break;
+      case 'ArrowDown':  tY -= step; break;
+      case '+': case '=': zoomAt(vw / 2, vh / 2, 1.25); break;
+      case '-': case '_': zoomAt(vw / 2, vh / 2, 1 / 1.25); break;
+      default: handled = false;
+    }
+    if (!handled) return;
+    e.preventDefault(); lerp = 0.18; clampView(); touched();
+  });
+
+  addEventListener('resize', function () {
+    /* An orientation flip swaps the whole composition, so re-fit rather
+       than trying to preserve a viewpoint that no longer exists. */
+    if (pickLayout() !== layoutName) {
+      build(pickLayout());
+      measure();
+      var f = fitView();
+      tS = f.s; tX = f.x; tY = f.y;
+      clampView();
+      return;
+    }
+    var relX = (vw / 2 - tX) / tS, relY = (vh / 2 - tY) / tS;   // keep looking at the same spot
+    var oldFit = fitScale;
+    measure();
+    tS = tS * (fitScale / oldFit);
+    tX = vw / 2 - relX * tS;
+    tY = vh / 2 - relY * tS;
+    clampView();
+  });
+
+  /* -------------------------------------------------------------
+     BOOT - hold until Poppins is in, so the composed layout does not
+     reflow from fallback metrics under the visitor.
+     ------------------------------------------------------------- */
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    build(pickLayout());
+    measure();
+    var v = reduce ? fitView() : startView();
+    tS = cS = v.s; tX = cX = v.x; tY = cY = v.y;
+    document.body.classList.add('ready');
+    if (reduce) touched();
+    requestAnimationFrame(frame);
+  }
+
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('900 1em Poppins').then(start, start);
+    setTimeout(start, 700);
+  } else {
+    addEventListener('load', start);
+  }
+})();
+</script>
+
+</body>
+</html>
