@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BLUE — METRO / exploded assembly (3D prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ==================================================================
+   METRO — STANDALONE 3D PROTOTYPE
+
+   Not part of V7 yet. This exists so the 3D itself can be judged:
+   geometry, materials, light, shadow, depth, and the assembly.
+
+   Everything in the scene is real geometry built in code from the
+   five METRO renders in assets/metro.png. No photograph is used as
+   a texture, a billboard or a backdrop - the images were reference
+   for proportion and construction only.
+   ================================================================== */
+:root{
+  --navy:#14427F; --deep:#08264A; --dark:#07121F;
+  --elec:#2563EB; --orange:#F9B016; --off:#F7F7F3;
+  --disp:'Montserrat',system-ui,sans-serif;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; background:var(--dark); }
+body{ font-family:var(--disp); color:#fff; overflow-x:hidden; }
+
+/* The scene is pinned; the page below it is the scroll track that
+   drives the assembly. Same idea V7 already uses everywhere. */
+#pin{ position:fixed; inset:0; z-index:1; }
+#gl{ display:block; width:100%; height:100%; }
+#track{ position:relative; z-index:2; height:600vh; pointer-events:none; }
+
+/* ---- chrome ---------------------------------------------------- */
+.meta{ font-weight:700; font-size:11px; letter-spacing:.26em; text-transform:uppercase; }
+#hud{
+  position:fixed; z-index:5; inset-inline-start:clamp(18px,4vw,54px); top:clamp(18px,4vw,54px);
+  pointer-events:none; max-width:34ch;
+}
+#hud .eye{ display:flex; align-items:center; gap:12px; color:var(--orange); }
+#hud .eye i{ width:11px; height:11px; border-radius:50%; background:var(--orange); display:block; }
+#hud h1{
+  margin:10px 0 0; font-weight:900; font-size:clamp(26px,4.2vw,62px);
+  line-height:.92; letter-spacing:-.035em; text-transform:uppercase;
+}
+#hud p{ margin:14px 0 0; max-width:30ch; font-size:13px; line-height:1.6; color:rgba(255,255,255,.6); font-weight:500; }
+
+#stateline{
+  position:fixed; z-index:5; inset-inline-start:clamp(18px,4vw,54px);
+  bottom:clamp(84px,12vh,120px); pointer-events:none;
+  font-weight:900; font-size:clamp(18px,2.2vw,32px); letter-spacing:-.02em;
+}
+#stateline em{ font-style:normal; color:var(--orange); }
+
+#cred{
+  position:fixed; z-index:5; inset-inline-end:clamp(18px,4vw,54px);
+  bottom:clamp(18px,4vw,54px); color:rgba(255,255,255,.38); pointer-events:none; text-align:right;
+}
+
+/* ---- the test rig. Prototype only; it does not ship in V7. ----- */
+#rig{
+  position:fixed; z-index:9; left:50%; transform:translateX(-50%);
+  bottom:clamp(16px,3vw,28px);
+  display:flex; align-items:center; gap:14px;
+  padding:11px 16px; border-radius:12px;
+  background:rgba(7,18,31,.86); border:1px solid rgba(255,255,255,.16);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+}
+#rig input[type=range]{ width:min(44vw,380px); accent-color:var(--orange); }
+#rig b{ color:var(--orange); font-variant-numeric:tabular-nums; min-width:3.6em; text-align:right; }
+#rig button{
+  font:inherit; color:#fff; background:none; cursor:pointer;
+  border:1px solid rgba(255,255,255,.24); border-radius:7px; padding:6px 11px;
+}
+#rig button:hover{ border-color:var(--orange); color:var(--orange); }
+#rig button.on{ background:var(--orange); border-color:var(--orange); color:var(--dark); }
+#rig .sep{ width:1px; height:20px; background:rgba(255,255,255,.16); }
+
+#boot{
+  position:fixed; inset:0; z-index:20; background:var(--dark);
+  display:grid; place-items:center; transition:opacity .7s ease;
+}
+#boot.gone{ opacity:0; pointer-events:none; }
+#boot div{ text-align:center; color:rgba(255,255,255,.5); }
+#boot i{
+  display:block; width:34px; height:34px; margin:0 auto 18px;
+  border:2px solid rgba(255,255,255,.18); border-top-color:var(--orange);
+  border-radius:50%; animation:spin 1s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg) } }
+
+@media (max-width:760px){
+  #hud p{ display:none; }
+  #rig input[type=range]{ width:38vw; }
+  #rig .hide-s{ display:none; }
+}
+</style>
+</head>
+<body>
+
+<div id="pin"><canvas id="gl"></canvas></div>
+<div id="track"></div>
+
+<div id="hud">
+  <div class="eye meta"><i></i><span>BLUE &nbsp;·&nbsp; METRO retail stand</span></div>
+  <h1>Built from<br>fragments.</h1>
+  <p>Every component is real geometry, reconstructed from BLUE's own project renders. Scroll to assemble it.</p>
+</div>
+
+<div id="stateline"><span id="statetxt">Fully <em>exploded</em>.</span></div>
+<div id="cred" class="meta">3D prototype &nbsp;·&nbsp; not yet wired into V7</div>
+
+<div id="rig">
+  <span class="hide-s">Assembly</span>
+  <input type="range" id="scrub" min="0" max="1" step="0.001" value="0">
+  <b id="pct">0%</b>
+  <span class="sep"></span>
+  <button id="play" type="button">Play</button>
+  <button id="camA" type="button" class="on">Hero</button>
+  <button id="camB" type="button">Front</button>
+  <button id="camC" type="button">Top</button>
+</div>
+
+<div id="boot"><div><i></i><span class="meta">Building the stand</span></div></div>
+
+<script src="assets/lib/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ==================================================================
+   0. CONSTANTS
+
+   Every dimension is in metres and every one of them is anchored to
+   something countable in the renders. The deck is laid in standard
+   pallets (1.20 x 0.80), and the pallets are what set the whole
+   footprint: four across, three deep.
+   ================================================================== */
+var PAL_W = 1.20, PAL_D = 0.80, PAL_H = 0.14;
+var NX = 4, NZ = 3;                                  /* pallets       */
+var W = PAL_W * NX,        /* 4.80 */
+    D = PAL_D * NZ * 1.5,  /* 3.60 */
+    H = 3.10;
+var HW = W/2, HD = D/2;
+var DECK = PAL_H;                                    /* walking level */
+
+var R = matchMedia('(prefers-reduced-motion: reduce)').matches;
+var clamp = function(v,a,b){ return v<a?a:v>b?b:v; };
+var lerp  = function(a,b,t){ return a+(b-a)*t; };
+/* a settle with no overshoot - nothing here is allowed to bounce */
+function settle(t){ return 1 - Math.pow(1 - t, 3.2); }
+function smooth(t){ return t*t*(3-2*t); }
+function win(p,a,b){ return clamp((p-a)/(b-a), 0, 1); }
+
+var PAL = {
+  steel:   0x191E25,   /* the frame: near-black, faintly blue        */
+  steelHi: 0x2A323C,
+  timber:  0xC8A97E,   /* pallets, cladding, tables                  */
+  timberD: 0x8A6E4B,
+  ply:     0xC9B491,
+  chalk:   0x14181C,
+  white:   0xF7F7F3,
+  green:   0x2A8C24,
+  red:     0xC0161F,
+  blue:    0x0E3A78,
+  cyan:    0x2563EB,
+  orange:  0xF9B016,
+  deep:    0x08264A,
+  dark:    0x07121F
+};
+
+/* ==================================================================
+   1. RENDERER, SCENE, CAMERA
+   ================================================================== */
+var canvas = document.getElementById('gl');
+var renderer = new THREE.WebGLRenderer({
+  canvas: canvas, antialias:true, powerPreference:'high-performance', alpha:false
+});
+renderer.setClearColor(PAL.dark, 1);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.physicallyCorrectLights = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.00;
+if ('outputColorSpace' in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
+else renderer.outputEncoding = THREE.sRGBEncoding;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(PAL.dark);
+/* the room falls away into the same navy the site is built in */
+scene.fog = new THREE.Fog(PAL.dark, 24, 62);
+
+/* A long lens. Wide angles make an architectural object look like a
+   toy - 32mm-equivalent keeps the verticals calm and the stand read
+   as a building rather than a prop. */
+var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
+
+/* ==================================================================
+   2. LIGHT
+
+   Studio, not scene. One key with a tight shadow frustum, a broad
+   navy-to-dark hemisphere for the room's own bounce, a cool rim in
+   BLUE's electric blue, and warm practicals inside so the stand
+   glows from within the way the real renders do.
+   ================================================================== */
+var key = new THREE.DirectionalLight(0xFFF3E2, 1.9);
+key.position.set(7.5, 11, 6.5);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 1;
+key.shadow.camera.far  = 40;
+var SS = 9.5;
+key.shadow.camera.left = -SS; key.shadow.camera.right = SS;
+key.shadow.camera.top  =  SS; key.shadow.camera.bottom = -SS;
+key.shadow.bias = -0.0006;
+key.shadow.normalBias = 0.022;
+key.shadow.radius = 3;
+scene.add(key, key.target);
+key.target.position.set(0, 1.2, 0);
+
+var hemi = new THREE.HemisphereLight(0x7FA3D2, PAL.deep, 0.26);
+scene.add(hemi);
+
+/* the rim is the only place electric blue is allowed to appear */
+var rim = new THREE.DirectionalLight(PAL.cyan, 1.05);
+rim.position.set(-8, 4.5, -7);
+scene.add(rim);
+
+var fill = new THREE.DirectionalLight(0xBFD6F2, 0.26);
+fill.position.set(-5, 3, 8);
+scene.add(fill);
+
+/* the practicals: what the track spots are actually throwing */
+var warmA = new THREE.PointLight(0xFFC98A, 22, 10, 2); warmA.position.set(-1.2, 2.55, -0.6);
+var warmB = new THREE.PointLight(0xFFD8A6, 18, 10, 2); warmB.position.set( 1.6, 2.55, -0.9);
+scene.add(warmA, warmB);
+
+/* --- environment -------------------------------------------------
+   Materials with nothing to reflect look like plastic. There is no
+   HDRI here and nothing is fetched, so the environment is generated:
+   a small emissive room, pre-filtered once at boot. It is the single
+   biggest difference between "a Three.js demo" and something that
+   looks lit. */
+function makeEnvTexture(){
+  var s = new THREE.Scene();
+  var box = new THREE.BoxGeometry(20, 12, 20);
+  var shell = new THREE.Mesh(box, new THREE.MeshBasicMaterial({
+    color:new THREE.Color(0x1B3357), side:THREE.BackSide
+  }));
+  s.add(shell);
+  function lamp(col, mult, x,y,z, w,h,d){
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+      new THREE.MeshBasicMaterial({ color:new THREE.Color(col).multiplyScalar(mult) }));
+    m.position.set(x,y,z); s.add(m);
+  }
+  lamp(0xFFFFFF, 5.2,  0, 5.6,  0, 12, .2, 12);   /* soft box overhead */
+  lamp(0xCFE2FF, 2.0, -9, 1.5,  0, .2, 8, 16);    /* cool side wall    */
+  lamp(0xFFE3BE, 1.6,  9, 1.0,  0, .2, 6, 14);    /* warm side wall    */
+  lamp(0x0B1B30, 1.0,  0,-5.9,  0, 18, .2, 18);   /* dark floor        */
+  var pm = new THREE.PMREMGenerator(renderer);
+  pm.compileEquirectangularShader();
+  var t = pm.fromScene(s, 0.035).texture;
+  pm.dispose();
+  return t;
+}
+scene.environment = makeEnvTexture();
+
+/* ==================================================================
+   3. MATERIALS
+   Procedural throughout. Nothing is fetched and no photograph is
+   used as a surface - the palette is BLUE's, and the grain is drawn.
+   ================================================================== */
+function cnv(w,h){ var c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+function tex(c, rx, ry){
+  var t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(rx||1, ry||1);
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  if ('colorSpace' in t) t.colorSpace = THREE.SRGBColorSpace;
+  else t.encoding = THREE.sRGBEncoding;
+  return t;
+}
+/* a plain data texture for roughness/bump - no colour space */
+function texLin(c, rx, ry){
+  var t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(rx||1, ry||1);
+  return t;
+}
+
+/* --- timber grain ------------------------------------------------ */
+function grainCanvas(base, dark, seed){
+  var c = cnv(512, 512), g = c.getContext('2d');
+  g.fillStyle = base; g.fillRect(0,0,512,512);
+  var i, y;
+  /* long grain lines, drifting, never parallel for long */
+  for (i = 0; i < 190; i++){
+    var t = (i / 190);
+    y = t * 512 + Math.sin(i * 1.7 + seed) * 3;
+    g.strokeStyle = 'rgba(' + dark + ',' + (0.07 + (i % 7) * 0.026).toFixed(3) + ')';
+    g.lineWidth = 0.6 + (i % 5) * 0.5;
+    g.beginPath();
+    for (var x = 0; x <= 512; x += 16){
+      var yy = y + Math.sin((x / 512) * 6.283 * (1 + (i % 3) * .4) + i) * (2 + (i % 4));
+      if (x === 0) g.moveTo(x, yy); else g.lineTo(x, yy);
+    }
+    g.stroke();
+  }
+  /* knots, sparingly */
+  for (i = 0; i < 3; i++){
+    var kx = ((i * 173 + seed * 57) % 480) + 16, ky = ((i * 311 + seed * 91) % 480) + 16;
+    for (var r = 12; r > 0; r -= 2){
+      g.strokeStyle = 'rgba(' + dark + ',.05)';
+      g.beginPath(); g.ellipse(kx, ky, r, r * 0.55, i, 0, 6.283); g.stroke();
+    }
+  }
+  return c;
+}
+var timberMap  = tex(grainCanvas('#C8A97E', '90,66,38', 3), 1, 1);
+var timberDMap = tex(grainCanvas('#A98A5F', '70,48,26', 11), 1, 1);
+var plyMap     = tex(grainCanvas('#C9B491', '110,86,52', 7), 1, 1);
+
+function M(opts){ return new THREE.MeshStandardMaterial(opts); }
+
+var MAT = {
+  steel: M({ color:PAL.steel, roughness:.42, metalness:.72, envMapIntensity:1.1 }),
+  steelSoft: M({ color:PAL.steelHi, roughness:.55, metalness:.55 }),
+  timber: M({ color:0xffffff, map:timberMap, roughness:.72, metalness:0, envMapIntensity:.7 }),
+  timberD: M({ color:0xffffff, map:timberDMap, roughness:.78, metalness:0, envMapIntensity:.6 }),
+  ply: M({ color:0xffffff, map:plyMap, roughness:.8, metalness:0, envMapIntensity:.6 }),
+  white: M({ color:PAL.white, roughness:.5, metalness:.02, envMapIntensity:1 }),
+  chalk: M({ color:PAL.chalk, roughness:.94, metalness:0 }),
+  fabric: M({ color:0xDCC7A0, roughness:.94, metalness:0, side:THREE.DoubleSide, envMapIntensity:.5 }),
+  fabric2: M({ color:0xBFA57C, roughness:.95, metalness:0, side:THREE.DoubleSide, envMapIntensity:.5 }),
+  green: M({ color:PAL.green, roughness:.40, metalness:.02, envMapIntensity:.35 }),
+  red:   M({ color:PAL.red,   roughness:.40, metalness:.02, envMapIntensity:.35 }),
+  blue:  M({ color:PAL.blue,  roughness:.40, metalness:.02, envMapIntensity:.35 }),
+  glass: new THREE.MeshPhysicalMaterial({
+    color:0xBFD8EC, roughness:.06, metalness:0, transmission:.92,
+    thickness:.35, transparent:true, opacity:.5, envMapIntensity:1.4
+  }),
+  lampOn: new THREE.MeshBasicMaterial({ color:0xFFE0B0 }),
+  orange: M({ color:PAL.orange, roughness:.55, metalness:.05 }),
+  leaf: M({ color:0x3E7A3A, roughness:.85, metalness:0, side:THREE.DoubleSide })
+};
+
+/* ==================================================================
+   4. GEOMETRY HELPERS
+   ================================================================== */
+var BOX = new THREE.BoxGeometry(1,1,1);
+function box(mat, w,h,d, x,y,z, rx,ry,rz){
+  var m = new THREE.Mesh(BOX, mat);
+  m.scale.set(w,h,d); m.position.set(x,y,z);
+  if (rx||ry||rz) m.rotation.set(rx||0, ry||0, rz||0);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function part(name){
+  var g = new THREE.Group(); g.name = name; return g;
+}
+
+/* --- a pallet ----------------------------------------------------- */
+/* Top boards, three stringers, bottom boards. The gaps between the
+   top boards are what make the deck read as pallets and not as a
+   plinth, so they are modelled rather than textured. */
+function pallet(){
+  var g = part('pallet');
+  var tb = 7, bw = PAL_W / (tb + (tb-1)*0.30);
+  var gap = bw * 0.30;
+  var i, x;
+  for (i = 0; i < tb; i++){
+    x = -PAL_W/2 + bw/2 + i * (bw + gap);
+    g.add(box(MAT.timber, bw, 0.022, PAL_D, x, PAL_H - 0.011, 0));
+  }
+  for (i = 0; i < 3; i++){
+    var z = -PAL_D/2 + PAL_D/2 * i;
+    g.add(box(MAT.timberD, PAL_W, 0.075, 0.10, 0, PAL_H - 0.022 - 0.0375, z));
+  }
+  for (i = 0; i < 3; i++){
+    x = -PAL_W/2 + PAL_W/2 * i;
+    g.add(box(MAT.timberD, 0.11, 0.020, PAL_D, x, 0.010, 0));
+  }
+  return g;
+}
+
+/* --- a crate ------------------------------------------------------ */
+/* Five thin panels, open to the front, with a lip - the real crates
+   in the renders are moulded, so the walls have thickness and the
+   inside catches its own shadow. */
+function crate(mat, w, h, d){
+  var g = part('crate'), t = 0.022;
+  g.add(box(mat, w, t, d, 0, -h/2 + t/2, 0));            /* floor  */
+  g.add(box(mat, t, h, d, -w/2 + t/2, 0, 0));            /* left   */
+  g.add(box(mat, t, h, d,  w/2 - t/2, 0, 0));            /* right  */
+  g.add(box(mat, w, h, t, 0, 0, -d/2 + t/2));            /* back   */
+  g.add(box(mat, w, t*1.6, d*0.14, 0, h/2 - t, d/2 - d*0.07)); /* front lip */
+  return g;
+}
+
+/* --- a fabric drape ----------------------------------------------
+   The ceiling is the character of this stand: strips of awning
+   fabric slung between battens, sagging under their own weight. A
+   flat plane would throw the whole thing away, so each strip is a
+   subdivided surface displaced by a catenary across the span with a
+   second, gentler sag across its width. */
+function drape(w, d, sag, phase, mat){
+  var g = new THREE.PlaneGeometry(w, d, 24, 18);
+  g.rotateX(-Math.PI/2);
+  var p = g.attributes.position;
+  for (var i = 0; i < p.count; i++){
+    var u = p.getX(i) / (w/2);          /* -1..1 across the width */
+    var v = p.getZ(i) / (d/2);          /* -1..1 along the span   */
+    var y = -sag * (1 - v*v)            /* the main sag           */
+            - sag * 0.34 * (1 - u*u)    /* fabric bellying sideways */
+            + Math.sin(u * 3.1 + phase) * sag * 0.10;
+    p.setY(i, y);
+  }
+  g.computeVertexNormals();
+  var m = new THREE.Mesh(g, mat);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+
+/* --- the signage --------------------------------------------------
+   Drawn to a canvas at high resolution and extruded on a plate. The
+   wordmark is real type, not an image lifted out of a render. */
+function signTexture(){
+  var c = cnv(2048, 640), g = c.getContext('2d');
+  g.clearRect(0,0,2048,640);
+  g.fillStyle = '#F7F7F3';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '900 380px Montserrat, "Arial Black", sans-serif';
+  g.fillText('METRO', 1024, 340);
+  /* the red tick over the M, as it is in the real mark */
+  g.strokeStyle = '#CE2130'; g.lineWidth = 54; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(560, 150); g.lineTo(650, 300); g.lineTo(830, 60); g.stroke();
+  return c;
+}
+function metroSign(width){
+  var g = part('sign');
+  var h = width * 0.30, dep = width * 0.055;
+  var faceC = signTexture();
+  var faceM = new THREE.MeshStandardMaterial({
+    map: tex(faceC, 1, 1), transparent:true, roughness:.42, metalness:.02,
+    emissive:0xffffff, emissiveMap: tex(faceC, 1, 1), emissiveIntensity:.30
+  });
+  /* the dark plate the letters stand on */
+  /* strict front-to-back order: dark plate, white extrusion, then the
+     type on the very front face. Anything else and the body of the
+     letters occludes the letters. */
+  g.add(box(MAT.steel, width * 1.12, h * 1.30, dep * 0.6, 0, 0, 0));
+  g.add(box(MAT.white, width * 0.99, h * 0.62, dep * 0.9, 0, -h * 0.02, dep * 0.60));
+  var face = new THREE.Mesh(new THREE.PlaneGeometry(width, h), faceM);
+  face.position.z = dep * 1.07; face.castShadow = false; face.renderOrder = 2;
+  g.add(face);
+  return g;
+}
+
+/* --- greenery, kept crude on purpose ------------------------------
+   A plant that is modelled in detail would be the only photoreal
+   thing in a stylised scene. Simple crossed blades read correctly at
+   this scale and stay in the same language as everything else. */
+function plant(h){
+  var g = part('plant');
+  g.add(box(MAT.ply, 0.34, 0.30, 0.34, 0, 0.15, 0));
+  for (var i = 0; i < 7; i++){
+    var a = i * 1.12, r = 0.10 + (i % 3) * 0.05;
+    var bl = new THREE.Mesh(new THREE.PlaneGeometry(0.20, h), MAT.leaf);
+    bl.position.set(Math.cos(a) * r, 0.30 + h/2 * 0.86, Math.sin(a) * r);
+    bl.rotation.set((i % 3) * 0.18 - 0.18, a, Math.sin(i) * 0.22);
+    bl.castShadow = true;
+    g.add(bl);
+  }
+  return g;
+}
+
+/* ==================================================================
+   5. THE STAND
+
+   Twelve components. Each one is a group with a HOME transform (the
+   finished stand) and an EXPLODE transform (where it waits). Nothing
+   is procedurally scattered - every offset is authored, the way the
+   exploded drawing BLUE already produced is composed.
+   ================================================================== */
+var stand = new THREE.Group();
+scene.add(stand);
+var COMP = [];
+
+function register(group, opts){
+  group.userData.home = {
+    p: group.position.clone(),
+    r: group.rotation.clone()
+  };
+  group.userData.ex = opts;             /* {p:Vector3 offset, r:Euler} */
+  group.userData.order = opts.order;
+  stand.add(group);
+  COMP.push(group);
+  return group;
+}
+
+/* ---- 01 BASE : the pallet deck ---------------------------------- */
+var gDeck = part('deck');
+for (var pz = 0; pz < NZ; pz++){
+  for (var px = 0; px < NX; px++){
+    var pl = pallet();
+    pl.position.set(-HW + PAL_W/2 + px * PAL_W, 0, -HD + (D/NZ)/2 + pz * (D/NZ));
+    pl.scale.z = (D/NZ) / PAL_D;
+    gDeck.add(pl);
+  }
+}
+register(gDeck, { p:new THREE.Vector3( 0.0, 0.00, 0.0), r:new THREE.Euler(0,0,0), order:0.00 });
+
+/* ---- 02 FLOOR : the boarded inner floor -------------------------- */
+var gFloor = part('floor');
+var fb = 16, fbw = (W - 0.10) / fb;
+for (var i2 = 0; i2 < fb; i2++){
+  gFloor.add(box(MAT.timber, fbw * 0.94, 0.026, D - 0.10,
+    -HW + 0.05 + fbw/2 + i2 * fbw, DECK + 0.013, 0));
+}
+register(gFloor, { p:new THREE.Vector3( 0.0, 0.55, 0.0), r:new THREE.Euler(0,0,0), order:0.06 });
+
+/* ---- 03 STRUCTURE : posts and header frame ----------------------- */
+var gFrame = part('frame');
+var PS = 0.13;
+[[-HW,-HD],[HW,-HD],[-HW,HD],[HW,HD]].forEach(function(c){
+  gFrame.add(box(MAT.steel, PS, H, PS, c[0], H/2, c[1]));
+});
+/* the header ring */
+gFrame.add(box(MAT.steel, W + PS, 0.17, PS, 0, H - 0.085, -HD));
+gFrame.add(box(MAT.steel, W + PS, 0.17, PS, 0, H - 0.085,  HD));
+gFrame.add(box(MAT.steel, PS, 0.17, D - PS, -HW, H - 0.085, 0));
+gFrame.add(box(MAT.steel, PS, 0.17, D - PS,  HW, H - 0.085, 0));
+/* the front fascia the sign is mounted to */
+gFrame.add(box(MAT.steel, W + PS, 0.40, 0.09, 0, H - 0.30, HD + 0.02));
+register(gFrame, { p:new THREE.Vector3( 0.0, 1.70, 0.0), r:new THREE.Euler(0,0,0), order:0.14 });
+
+/* ---- 04 BRACES : the X, which is the stand's signature ----------- */
+var gBrace = part('brace');
+function xBrace(x, z, span, rotY){
+  var g = part('x');
+  var len = Math.sqrt(span*span + (H-0.3)*(H-0.3));
+  var ang = Math.atan2(span, H - 0.3);
+  g.add(box(MAT.steel, 0.085, len, 0.085, 0, H/2,  0, 0, 0,  ang));
+  g.add(box(MAT.steel, 0.085, len, 0.085, 0, H/2,  0, 0, 0, -ang));
+  g.position.set(x, 0, z); g.rotation.y = rotY || 0;
+  return g;
+}
+gBrace.add(xBrace(-W*0.25, HD, W*0.24, 0));
+gBrace.add(xBrace( W*0.25, HD, W*0.24, 0));
+gBrace.add(xBrace( HW, -D*0.20, D*0.22, Math.PI/2));
+register(gBrace, { p:new THREE.Vector3( 0.0, 3.05, 1.6), r:new THREE.Euler(0,0,0.06), order:0.30 });
+
+/* ---- 05 BATTENS : the ceiling rails ------------------------------ */
+var gBat = part('battens');
+var NB = 6;
+for (var b2 = 0; b2 <= NB; b2++){
+  var zb = -HD + (D / NB) * b2;
+  gBat.add(box(MAT.steel, W, 0.07, 0.07, 0, H - 0.22, zb));
+}
+register(gBat, { p:new THREE.Vector3( 0.0, 3.85, 0.0), r:new THREE.Euler(0,0,0), order:0.44 });
+
+/* ---- 06 CANOPY : the sagging fabric ------------------------------ */
+var gCan = part('canopy');
+for (var c2 = 0; c2 < NB; c2++){
+  var dz = D / NB;
+  var dr = drape(W - 0.14, dz * 0.99, 0.42, c2 * 1.3,
+                 c2 % 2 ? MAT.fabric2 : MAT.fabric);
+  dr.position.set(0, H - 0.26, -HD + dz/2 + c2 * dz);
+  gCan.add(dr);
+}
+register(gCan, { p:new THREE.Vector3( 0.0, 4.75, 0.0), r:new THREE.Euler(0.07,0,0), order:0.52 });
+
+/* ---- 07 BACK WALL : timber cladding ------------------------------ */
+var gBack = part('back');
+var nb2 = 26, bw2 = W / nb2;
+for (var i3 = 0; i3 < nb2; i3++){
+  gBack.add(box(MAT.ply, bw2 * 0.93, H - DECK - 0.2, 0.05,
+    -HW + bw2/2 + i3 * bw2, DECK + (H - DECK - 0.2)/2, -HD + 0.03));
+}
+register(gBack, { p:new THREE.Vector3( 0.0, 2.35,-1.5), r:new THREE.Euler(0.05,0,0), order:0.36 });
+
+/* ---- 08 CRATE WALL : the colour ---------------------------------- */
+/* Four columns by four rows on the right of the back wall, with two
+   deliberately left out - in the renders the grid is broken, which
+   is what stops it reading as a shelf unit. */
+var gCrate = part('crates');
+var CW = 0.44, CH = 0.36, CD = 0.30, CGx = 0.52, CGy = 0.46;
+var COLS = [MAT.green, MAT.red, MAT.blue, MAT.green, MAT.red, MAT.blue];
+var SKIP = { '1,2':1, '3,0':1 };
+var k3 = 0;
+for (var cy = 0; cy < 4; cy++){
+  for (var cx3 = 0; cx3 < 4; cx3++){
+    if (SKIP[cx3 + ',' + cy]) { k3++; continue; }
+    var cr = crate(COLS[(cx3 * 3 + cy * 2 + k3) % COLS.length], CW, CH, CD);
+    cr.position.set(0.35 + cx3 * CGx, DECK + 1.05 + cy * CGy, -HD + 0.06 + CD/2);
+    cr.userData.seed = k3;
+    gCrate.add(cr);
+    k3++;
+  }
+}
+register(gCrate, { p:new THREE.Vector3( 4.0, 2.30, 0.7), r:new THREE.Euler(0,-0.34,0), order:0.62 });
+
+/* ---- 09 SHELVING + CHALKBOARDS : the left wall -------------------- */
+var gShelf = part('shelf');
+gShelf.add(box(MAT.ply, 0.06, H - DECK - 0.3, D * 0.62, -HW + 0.05, DECK + (H-DECK-0.3)/2, -D*0.14));
+for (var s3 = 0; s3 < 3; s3++){
+  gShelf.add(box(MAT.chalk, 0.03, 0.52, 0.74, -HW + 0.10, DECK + 1.75 - s3 * 0.0, -D*0.30 + s3 * 0.78));
+}
+for (var s4 = 0; s4 < 3; s4++){
+  gShelf.add(box(MAT.timber, 0.26, 0.03, D * 0.56, -HW + 0.19, DECK + 0.55 + s4 * 0.40, -D*0.14));
+  for (var q3 = 0; q3 < 5; q3++){
+    gShelf.add(box(MAT.green, 0.14, 0.13, 0.14,
+      -HW + 0.19, DECK + 0.63 + s4 * 0.40, -D*0.14 - D*0.24 + q3 * (D*0.12)));
+  }
+}
+register(gShelf, { p:new THREE.Vector3(-4.3, 1.15,-0.5), r:new THREE.Euler(0,0.30,0), order:0.56 });
+
+/* ---- 10 COUNTER --------------------------------------------------- */
+var gCount = part('counter');
+gCount.add(box(MAT.chalk, 2.10, 1.02, 0.72, -1.05, DECK + 0.51, -0.35));
+gCount.add(box(MAT.timber, 2.14, 0.10, 0.76, -1.05, DECK + 1.02, -0.35));
+/* the slatted front, which is what you actually see */
+for (var f3 = 0; f3 < 12; f3++){
+  gCount.add(box(MAT.timber, 2.10, 0.055, 0.035, -1.05, DECK + 0.10 + f3 * 0.078, -0.35 + 0.375));
+}
+gCount.add(box(MAT.chalk, 1.9, 0.62, 0.05, -1.05, DECK + 1.86, -0.72));
+register(gCount, { p:new THREE.Vector3(-3.5, 0.55, 1.7), r:new THREE.Euler(0,0.34,0), order:0.70 });
+
+/* ---- 11 CABINET : the chilled display ----------------------------- */
+var gFridge = part('fridge');
+gFridge.add(box(MAT.white, 1.05, 1.95, 0.60, -0.25, DECK + 0.975, -HD + 0.40));
+gFridge.add(box(MAT.red,   1.05, 0.18, 0.62, -0.25, DECK + 1.86,  -HD + 0.40));
+var glassM = new THREE.Mesh(new THREE.BoxGeometry(0.94, 1.55, 0.04), MAT.glass);
+glassM.position.set(-0.25, DECK + 0.92, -HD + 0.71);
+gFridge.add(glassM);
+for (var r4 = 0; r4 < 4; r4++){
+  gFridge.add(box(MAT.steelSoft, 0.90, 0.02, 0.50, -0.25, DECK + 0.34 + r4 * 0.40, -HD + 0.40));
+  for (var q4 = 0; q4 < 6; q4++){
+    gFridge.add(box(MAT.blue, 0.09, 0.24, 0.09,
+      -0.25 - 0.36 + q4 * 0.145, DECK + 0.47 + r4 * 0.40, -HD + 0.36));
+  }
+}
+register(gFridge, { p:new THREE.Vector3( 0.5, 1.05,-3.6), r:new THREE.Euler(0,0,0), order:0.66 });
+
+/* ---- 12 PRODUCE + FURNITURE + PLANTS ------------------------------ */
+var gProd = part('produce');
+function produceCrate(x, z, ry){
+  var g = crate(MAT.timberD, 0.56, 0.30, 0.40);
+  g.position.set(x, DECK + 0.15, z); g.rotation.y = ry;
+  /* the fruit: the only saturated colour on the deck, and it is the
+     project's own */
+  var sph = new THREE.SphereGeometry(0.055, 12, 10);
+  for (var i4 = 0; i4 < 14; i4++){
+    var m = new THREE.Mesh(sph, MAT.orange);
+    m.position.set(-0.20 + (i4 % 5) * 0.10, 0.17 + Math.floor(i4/5) * 0.075,
+                   -0.10 + (i4 % 3) * 0.09);
+    m.castShadow = true; g.add(m);
+  }
+  return g;
+}
+gProd.add(produceCrate(1.55, 0.55, -0.16));
+gProd.add(produceCrate(1.95, 1.15,  0.22));
+gProd.add(produceCrate(1.10, 1.20,  0.05));
+function stool(x, z){
+  var g = part('stool');
+  g.add(box(MAT.timber, 0.34, 0.05, 0.34, 0, DECK + 0.44, 0));
+  for (var l4 = 0; l4 < 4; l4++){
+    g.add(box(MAT.timberD, 0.035, 0.44, 0.035,
+      (l4 % 2 ? 1 : -1) * 0.13, DECK + 0.22, (l4 < 2 ? 1 : -1) * 0.13));
+  }
+  g.position.set(x, 0, z); return g;
+}
+gProd.add(stool(-1.85, 1.15));
+gProd.add(stool(-1.05, 1.35));
+var pl2 = plant(0.62); pl2.position.set(0.55, DECK, 0.95); gProd.add(pl2);
+var pl3 = plant(0.50); pl3.position.set(-2.05, DECK, -0.05); gProd.add(pl3);
+register(gProd, { p:new THREE.Vector3( 3.5, 1.05, 1.1), r:new THREE.Euler(0,0,0), order:0.78 });
+
+/* ---- 13 LIGHTING TRACK : the practicals --------------------------- */
+var gSpots = part('spots');
+var CONE = new THREE.CylinderGeometry(0.05, 0.075, 0.13, 12);
+for (var t4 = 0; t4 < 8; t4++){
+  var sp = part('spot');
+  var bd = new THREE.Mesh(CONE, MAT.steel); bd.castShadow = true;
+  var lens = new THREE.Mesh(new THREE.CircleGeometry(0.048, 12), MAT.lampOn);
+  lens.rotation.x = Math.PI/2; lens.position.y = -0.066;
+  sp.add(bd, lens);
+  sp.position.set(-HW + 0.7 + (t4 % 4) * (W - 1.4)/3, H - 0.32, -HD + 0.55 + Math.floor(t4/4) * (D - 1.1));
+  sp.rotation.z = (t4 % 4 - 1.5) * 0.10;
+  gSpots.add(sp);
+}
+register(gSpots, { p:new THREE.Vector3( 0.0, 4.35, 0.0), r:new THREE.Euler(0,0,0), order:0.86 });
+
+/* ---- 14 SIGNAGE : last on, as it is on site ----------------------- */
+var gSign = metroSign(1.85);
+gSign.position.set(0, H + 0.02, HD + 0.13);
+register(gSign, { p:new THREE.Vector3( 0.0, 5.20, 0.9), r:new THREE.Euler(-0.14,0,0), order:0.94 });
+
+/* ==================================================================
+   6. THE GROUND
+   A dark navy floor that takes the shadow and fades out before it
+   ever shows an edge. No grid, no horizon line.
+   ================================================================== */
+var floorC = cnv(1024, 1024), fg = floorC.getContext('2d');
+var rgd = fg.createRadialGradient(512,512,60, 512,512,512);
+rgd.addColorStop(0,   '#0B2340');
+rgd.addColorStop(.28, '#081A33');
+rgd.addColorStop(.72, '#07121F');
+rgd.addColorStop(1,   '#07121F');
+fg.fillStyle = rgd; fg.fillRect(0,0,1024,1024);
+var ground = new THREE.Mesh(
+  new THREE.CircleGeometry(95, 96),
+  M({ color:0xffffff, map:tex(floorC,1,1), roughness:.93, metalness:.02, envMapIntensity:.22 })
+);
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -0.001;
+ground.receiveShadow = true;
+scene.add(ground);
+
+/* ==================================================================
+   7. ASSEMBLY
+   One function of one number. Each component has its own window, so
+   the stand builds bottom-up the way it is actually built: deck,
+   floor, frame, wall, braces, ceiling, fittings, then the sign.
+   ================================================================== */
+var _p = new THREE.Vector3(), _e = new THREE.Euler();
+function setAssembly(t){
+  for (var i = 0; i < COMP.length; i++){
+    var g = COMP[i], hm = g.userData.home, ex = g.userData.ex;
+    var a = ex.order * 0.55;                 /* its slot in the build */
+    var k = settle(win(t, a, a + 0.42));
+    var open = 1 - k;
+
+    g.position.set(
+      hm.p.x + ex.p.x * open,
+      hm.p.y + ex.p.y * open,
+      hm.p.z + ex.p.z * open
+    );
+    g.rotation.set(
+      hm.r.x + ex.r.x * open,
+      hm.r.y + ex.r.y * open,
+      hm.r.z + ex.r.z * open
+    );
+    /* a component still on its way in is fractionally smaller, which
+       is what sells distance without moving the camera */
+    var s = 1 - open * 0.055;
+    g.scale.set(s, s, s);
+  }
+  /* the practicals only come up once there is a stand to light */
+  var lit = win(t, 0.72, 0.98);
+  warmA.intensity = 22 * lit; warmB.intensity = 18 * lit;
+  MAT.lampOn.color.setRGB(1, 0.88 * (0.25 + 0.75*lit), 0.69 * (0.15 + 0.85*lit));
+}
+
+/* ==================================================================
+   8. CAMERA
+   An authored move, never handed to the visitor. It starts wide and
+   high on the exploded stack and closes onto the three-quarter view
+   the project is best read from - the same angle BLUE's own hero
+   render was shot at.
+   ================================================================== */
+var VIEWS = {
+  /* `from` has to hold the whole exploded stack (about 9m tall), `to`
+     is the three-quarter angle BLUE's own hero render was shot at.
+     The look target travels down with the parts, so the composition
+     stays centred the whole way instead of drifting off the top. */
+  hero:  { from:[11.6,10.0,15.6], to:[6.9, 2.05, 8.1],  lookA:[-0.6,4.05,0], lookB:[-0.85,1.68,0] },
+  front: { from:[0.6,10.5, 24.0],  to:[0.3, 1.95,10.6], lookA:[0,4.95,0], lookB:[0,1.55,0] },
+  top:   { from:[10.5,20.0,15.0],  to:[4.6, 7.40, 6.2], lookA:[0,4.40,0], lookB:[0,1.10,0] }
+};
+var view = VIEWS.hero, viewMix = 1, viewFrom = VIEWS.hero;
+var camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
+/* the camera must not fly in from the world origin on first paint */
+var camReady = false;
+var ptr = { x:0, y:0, tx:0, ty:0 };
+addEventListener('pointermove', function(e){
+  ptr.tx = (e.clientX / innerWidth  - 0.5) * 2;
+  ptr.ty = (e.clientY / innerHeight - 0.5) * 2;
+});
+
+function setCamera(t, now){
+  var e = smooth(clamp(t, 0, 1));
+  var a = view.from, b = view.to;
+  /* a slow orbit that never fully stops, so the object stays alive
+     after the assembly has finished */
+  var idle = R ? 0 : Math.sin(now / 7000) * 0.055 * (0.35 + 0.65 * t);
+  ptr.x += (ptr.tx - ptr.x) * (R ? 1 : 0.045);
+  ptr.y += (ptr.ty - ptr.y) * (R ? 1 : 0.045);
+
+  var px = lerp(a[0], b[0], e), py = lerp(a[1], b[1], e), pz = lerp(a[2], b[2], e);
+  var ang = idle + ptr.x * 0.10;
+  var cs = Math.cos(ang), sn = Math.sin(ang);
+  camPos.set(px * cs - pz * sn, py + ptr.y * -0.55, px * sn + pz * cs);
+
+  camera.position.lerp(camPos, (R || !camReady) ? 1 : 0.085);
+  camReady = true;
+  camLook.set(
+    lerp(view.lookA[0], view.lookB[0], e),
+    lerp(view.lookA[1], view.lookB[1], e),
+    lerp(view.lookA[2], view.lookB[2], e)
+  );
+  camera.lookAt(camLook);
+}
+
+/* ==================================================================
+   9. THE PAGE
+   Scroll drives assembly; the rig can override it while judging.
+   ================================================================== */
+var track = document.getElementById('track');
+var scrub = document.getElementById('scrub'), pct = document.getElementById('pct');
+var statetxt = document.getElementById('statetxt');
+var override = null, playing = false, playT = 0;
+
+var STATES = [
+  [0.00, 'Fully <em>exploded</em>.'],
+  [0.14, 'The base <em>lands</em>.'],
+  [0.34, 'Structure <em>connects</em>.'],
+  [0.55, 'Walls and ceiling <em>close in</em>.'],
+  [0.76, 'Fittings <em>take their place</em>.'],
+  [0.94, 'METRO. <em>Complete</em>.']
+];
+var lastState = -1;
+function stateFor(t){
+  var idx = 0;
+  for (var i = 0; i < STATES.length; i++) if (t >= STATES[i][0]) idx = i;
+  if (idx !== lastState){ lastState = idx; statetxt.innerHTML = STATES[idx][1]; }
+}
+
+var SY = scrollY, tNow = 0;
+function progress(){
+  if (override !== null) return override;
+  var span = track.offsetHeight - innerHeight;
+  return span <= 0 ? 0 : clamp(SY / span, 0, 1);
+}
+
+function resize(){
+  var w = innerWidth, h = innerHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.setSize(w, h, false);
+}
+addEventListener('resize', resize);
+resize();
+
+var booted = false;
+function frame(now){
+  requestAnimationFrame(frame);
+
+  /* the same smoothing V7 uses: lerp the scroll once, here, and
+     everything downstream is fluid for free */
+  var y = scrollY, gap = y - SY;
+  SY += gap * (R ? 1 : (Math.abs(gap) > innerHeight ? 0.30 : 0.135));
+  if (Math.abs(y - SY) < 0.06) SY = y;
+
+  if (playing){
+    playT += 0.0032;
+    if (playT >= 1){ playT = 1; playing = false; document.getElementById('play').classList.remove('on'); }
+    override = playT; scrub.value = playT;
+  }
+
+  var t = progress();
+  tNow += (t - tNow) * (R ? 1 : 0.11);
+  setAssembly(tNow);
+  setCamera(tNow, now);
+  stateFor(tNow);
+  pct.textContent = Math.round(tNow * 100) + '%';
+  if (override === null) scrub.value = tNow;
+
+  renderer.render(scene, camera);
+
+  if (!booted){
+    booted = true;
+    document.getElementById('boot').classList.add('gone');
+  }
+}
+
+/* ---- rig ------------------------------------------------------- */
+scrub.addEventListener('input', function(){ override = +scrub.value; tNow = override; camReady = false; playing = false;
+  document.getElementById('play').classList.remove('on'); });
+document.getElementById('play').addEventListener('click', function(){
+  playing = !playing; this.classList.toggle('on', playing);
+  if (playing){ playT = (override === null ? tNow : override); if (playT > .99) playT = 0; }
+});
+function pickView(v, btn){
+  view = VIEWS[v]; camReady = false;
+  ['camA','camB','camC'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+  btn.classList.add('on');
+}
+document.getElementById('camA').addEventListener('click', function(){ pickView('hero', this); });
+document.getElementById('camB').addEventListener('click', function(){ pickView('front', this); });
+document.getElementById('camC').addEventListener('click', function(){ pickView('top', this); });
+addEventListener('wheel', function(){ override = null; }, { passive:true });
+
+/* fonts have to be in before the sign is drawn to a texture, or the
+   wordmark bakes in a fallback face */
+function start(){ setAssembly(0); requestAnimationFrame(frame); }
+if (document.fonts && document.fonts.ready){
+  document.fonts.ready.then(function(){
+    gSign.traverse(function(o){
+      if (o.material && o.material.map && o.material.emissiveMap){
+        var c = signTexture();
+        o.material.map.image = c; o.material.map.needsUpdate = true;
+        o.material.emissiveMap.image = c; o.material.emissiveMap.needsUpdate = true;
+      }
+    });
+    start();
+  });
+} else start();
+
+})();
+</script>
+</body>
+</html>
