@@ -298,7 +298,11 @@ nav a:hover::after{ transform:scaleX(1); }
 .t-signal .pts li{ opacity:.62; }
 
 @media (max-width:900px){
-  .cardholder{ height:auto; min-height:76vh; }
+  /* the sticky pile-and-slide effect needs a wide stage to slide cards
+     off to the side of; below 900px the holder drops out of sticky
+     entirely so the five cards just read top to bottom, each fully
+     clear of the one before it - stackDrive() skips this width too. */
+  .cardholder{ position:relative; top:auto; height:auto; min-height:76vh; margin-bottom:6vh; }
   .card{ position:relative; inset:auto; min-height:76vh; }
   .sc-in{ grid-template-columns:1fr; align-content:center; gap:clamp(18px,3vh,30px); }
   .t-paper .sc-txt,.t-paper .sc-fig,.t-ink .sc-txt,.t-frame .sc-txt,
@@ -1431,6 +1435,16 @@ var railAt=-1;
 
 function stackDrive(){
   if(!stackCards.length) return;
+  /* below 900px the holder gives up position:sticky (see the media
+     query) and the cards just stack in normal flow - this spatial,
+     W-relative slide-and-rotate exit only makes sense against a sticky
+     stage, so it is skipped entirely rather than fighting a layout it
+     was not written for. Clear any transform left over from a resize
+     across the breakpoint so a card never gets stuck mid-exit. */
+  if(innerWidth<=900){
+    for(var m=0;m<stackCards.length;m++) stackCards[m].style.transform='';
+    return;
+  }
   var stick=parseFloat(getComputedStyle(cardHolders[0]).top)||70;
   var travel=Math.max(1, innerHeight-stick);
   var enter=Math.min(travel, 560);      /* window over which a card rises in */
