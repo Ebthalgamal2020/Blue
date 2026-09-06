@@ -829,7 +829,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
             <span class="card-act">View more <i></i></span>
           </div>
           <figure class="sc-fig">
-            <img src="assets/v5/w017.jpg" alt="Identity work for Helmy" loading="lazy">
+            <img src="assets/v5/w017.jpg" alt="Identity work for Helmy" loading="lazy" width="360" height="360">
           </figure>
         </div>
       </article>
@@ -840,7 +840,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
       <article class="card t-ink" data-svc="1" tabindex="0">
         <span class="wedge w-tr"></span>
         <div class="sc-bleed">
-          <img src="assets/v5/w025.jpg" alt="Press sheet with colour bars" loading="lazy">
+          <img src="assets/v5/w025.jpg" alt="Press sheet with colour bars" loading="lazy" width="360" height="360">
         </div>
         <div class="sc-in">
           <div class="sc-txt">
@@ -860,7 +860,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
       <article class="card t-frame" data-svc="2" tabindex="0">
         <span class="wedge w-bl"></span>
         <div class="sc-bleed">
-          <img src="assets/v5/w012.jpg" alt="Food photography" loading="lazy">
+          <img src="assets/v5/w012.jpg" alt="Food photography" loading="lazy" width="360" height="360">
         </div>
         <div class="sc-in">
           <div class="sc-txt">
@@ -880,7 +880,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
       <article class="card t-floor" data-svc="3" data-live="1" tabindex="0">
         <span class="live-pip"><i></i> Live model</span>
         <div class="sc-live">
-          <img class="still" src="assets/metro.png" alt="Metro retail build" loading="lazy">
+          <img class="still" src="assets/metro.png" alt="Metro retail build" loading="lazy" width="1294" height="1216">
           <!-- src set only while the card is on screen -->
           <iframe id="cardmodel" title="Metro — live model" loading="lazy"></iframe>
         </div>
@@ -911,7 +911,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
             <span class="card-act">View more <i></i></span>
           </div>
           <figure class="sc-fig">
-            <img src="assets/v5/w072.jpg" alt="Social campaign creative" loading="lazy">
+            <img src="assets/v5/w072.jpg" alt="Social campaign creative" loading="lazy" width="360" height="360">
           </figure>
         </div>
       </article>
@@ -925,7 +925,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
   <div class="pin">
     <div class="mglow"></div>
     <div class="mfield" id="mstage">
-      <img class="still" src="assets/metro.png" alt="METRO retail build" loading="lazy">
+      <img class="still" src="assets/metro.png" alt="METRO retail build" loading="lazy" width="1294" height="1216">
       <iframe id="mmodel" title="METRO — live model. Drag to turn it."
               loading="lazy"></iframe>
     </div>
@@ -1036,6 +1036,14 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
 var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 var lerp = function(a,b,t){ return a+(b-a)*t; };
 var clamp01 = function(v){ return v<0?0:v>1?1:v; };
+/* window.innerWidth/innerHeight can drift from the real CSS viewport
+   under mobile emulation and on some real phones - documentElement's
+   clientWidth/clientHeight is the same number CSS itself uses for vw/vh
+   and media queries, and is the one that stays correct everywhere it
+   has been checked. Every scroll/layout calc below reads through these
+   instead of the raw globals. */
+function vw(){ return document.documentElement.clientWidth; }
+function vh(){ return document.documentElement.clientHeight; }
 
 /* ---------- the client wheel ----------
    Each mark is a slot rotated about the circle's centre, holding a pair
@@ -1052,8 +1060,8 @@ var KN=44, kslots=[], kmarks=[], klit=[], kseen=[];
   for(var i=0;i<KN;i++){
     var id=('0'+i).slice(-2), src='assets/v5/clients/k'+id+'.png';
     html+='<div class="kslot"><div class="kmark">'+
-          '<img class="q" src="'+src+'" alt="" loading="lazy">'+
-          '<img class="c" src="'+src+'" alt="" loading="lazy">'+
+          '<img class="q" src="'+src+'" alt="" loading="lazy" width="173" height="169">'+
+          '<img class="c" src="'+src+'" alt="" loading="lazy" width="173" height="169">'+
           '</div></div>';
   }
   dial.innerHTML=html;
@@ -1153,7 +1161,7 @@ function buildRiver(){
   }
   MASK.rN=Math.max(1,MASK.r1-MASK.r0+1);
   var nA=0, nB=0;
-  var skip=innerWidth<700 ? 2 : 1;
+  var skip=vw()<700 ? 2 : 1;
   for(var r=0;r<Rw;r++) for(var c=0;c<C;c++){
     if(!m[r*C+c]) continue;
     if(skip>1 && ((r+c)%skip)){ k++; continue; }
@@ -1254,12 +1262,12 @@ addEventListener('scroll',onScroll,{passive:true});
 /* section metrics, recomputed on resize */
 var M={};
 function measure(){
-  var vh=innerHeight;
+  var vhNow=vh();
   ['river','build'].forEach(function(id){
     var el=document.getElementById(id), r=el.getBoundingClientRect();
-    M[id]={ top:r.top+(window.pageYOffset||0), h:el.offsetHeight, vh:vh };
+    M[id]={ top:r.top+(window.pageYOffset||0), h:el.offsetHeight, vh:vhNow };
   });
-  M.vh=vh;
+  M.vh=vhNow;
 }
 function prog(id){                                  /* 0→1 across a pinned section */
   var m=M[id]; if(!m) return 0;
@@ -1451,14 +1459,14 @@ function stackDrive(){
      stage, so it is skipped entirely rather than fighting a layout it
      was not written for. Clear any transform left over from a resize
      across the breakpoint so a card never gets stuck mid-exit. */
-  if(innerWidth<=900){
+  if(vw()<=900){
     for(var m=0;m<stackCards.length;m++) stackCards[m].style.transform='';
     return;
   }
   var stick=parseFloat(getComputedStyle(cardHolders[0]).top)||70;
-  var travel=Math.max(1, innerHeight-stick);
+  var travel=Math.max(1, vh()-stick);
   var enter=Math.min(travel, 560);      /* window over which a card rises in */
-  var W=innerWidth, active=0, N=stackCards.length;
+  var W=vw(), active=0, N=stackCards.length;
 
   /* holders are never transformed, so this is the real scroll position */
   var top=cardHolders.map(function(h){ return h.getBoundingClientRect().top; });
@@ -1513,7 +1521,7 @@ function frame(now){
   /* -- 1 · the river ------------------------------------------------- */
   if(riverEl){
     var rrct=riverEl.getBoundingClientRect();
-    if(rrct.top<innerHeight && rrct.bottom>0) drawRiver(prog('river'), now||performance.now());
+    if(rrct.top<vh() && rrct.bottom>0) drawRiver(prog('river'), now||performance.now());
   }
 
   stackDrive();
@@ -1567,7 +1575,7 @@ var io=new IntersectionObserver(function(es){
     if(!t) return; e.preventDefault();
     var y=t.getBoundingClientRect().top+(window.pageYOffset||0);
     /* land inside pinned sections, not at their very top */
-    if(t.id==='build') y+= innerHeight*0.25;
+    if(t.id==='build') y+= vh()*0.25;
     window.scrollTo({ top:y, behavior:'smooth' });
   });
 });
@@ -1600,10 +1608,10 @@ var io=new IntersectionObserver(function(es){
    change - an actual rotation or breakpoint change - earns the full
    rebuild; a height-only resize just re-measures positions, which is
    cheap and safe to do on every one. */
-var lastBootWidth=innerWidth;
-function boot(){ measure(); sizeRiver(); buildRiver(); lastBootWidth=innerWidth; }
+var lastBootWidth=vw();
+function boot(){ measure(); sizeRiver(); buildRiver(); lastBootWidth=vw(); }
 addEventListener('resize',function(){
-  if(innerWidth!==lastBootWidth){ boot(); } else { measure(); }
+  if(vw()!==lastBootWidth){ boot(); } else { measure(); }
 });
 addEventListener('load',boot);
 boot();
