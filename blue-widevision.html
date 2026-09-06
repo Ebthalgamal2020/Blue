@@ -56,6 +56,16 @@ nav{
 }
 nav .mark{ width:30px; }
 nav .links{ display:flex; gap:clamp(18px,2.4vw,38px); align-items:center; }
+@media (max-width:760px){
+  /* on a small screen every section eventually scrolls close text
+     under this fixed bar - desktop gets away with a transparent nav
+     because there is room for generous top padding everywhere, mobile
+     does not. A plain frosted backing keeps the links legible and
+     stops whatever is scrolling behind them from reading as garbled
+     text, without touching any section's own layout. */
+  nav{ background:rgba(255,255,255,.86); -webkit-backdrop-filter:blur(10px);
+       backdrop-filter:blur(10px); box-shadow:0 1px 0 rgba(20,66,127,.08); }
+}
 nav a{
   font-size:11px; font-weight:600; letter-spacing:.2em; text-transform:uppercase;
   color:rgba(20,66,127,.55); text-decoration:none; position:relative; padding:4px 0;
