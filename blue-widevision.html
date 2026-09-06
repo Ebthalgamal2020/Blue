@@ -1590,9 +1590,21 @@ var io=new IntersectionObserver(function(es){
   tick(); setInterval(tick, 15000);
 })();
 
-/* ---------- boot ---------- */
-function boot(){ measure(); sizeRiver(); buildRiver(); }
-addEventListener('resize',function(){ boot(); });
+/* ---------- boot ----------
+   A real phone fires 'resize' continuously while scrolling - its
+   address bar hides and shows, changing innerHeight with no change in
+   layout width. Rebuilding the river's ~450 tiles on every one of
+   those (sizeRiver + buildRiver) is expensive enough to flash the
+   canvas blank mid-scroll, which is exactly the kind of gap that never
+   shows up testing at a fixed desktop viewport. Only a real width
+   change - an actual rotation or breakpoint change - earns the full
+   rebuild; a height-only resize just re-measures positions, which is
+   cheap and safe to do on every one. */
+var lastBootWidth=innerWidth;
+function boot(){ measure(); sizeRiver(); buildRiver(); lastBootWidth=innerWidth; }
+addEventListener('resize',function(){
+  if(innerWidth!==lastBootWidth){ boot(); } else { measure(); }
+});
 addEventListener('load',boot);
 boot();
 requestAnimationFrame(frame);
