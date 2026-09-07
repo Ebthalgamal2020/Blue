@@ -28,12 +28,22 @@
   --ease:cubic-bezier(.16,1,.3,1);
 }
 *{ box-sizing:border-box; }
-html{ scroll-behavior:auto; }
+/* overflow-x:hidden on body alone doesn't reliably stop horizontal pan
+   on every mobile browser - some still let the document's own scroll
+   root (html) drift sideways even with a clipped body underneath it.
+   Both, plus a hard width cap, is the standard belt-and-braces fix. */
+html{ scroll-behavior:auto; overflow-x:hidden; width:100%; }
 body{
   margin:0; background:var(--paper); color:var(--blue);
   font-family:'Montserrat',system-ui,-apple-system,sans-serif;
   font-weight:400; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-  overflow-x:hidden;
+  overflow-x:hidden; width:100%;
+  /* this page drives its own scroll-linked animation everywhere; the
+     browser's automatic scroll-anchoring (shifting scroll position to
+     compensate for content resizing above the fold) fights that and is
+     the likely cause of the page appearing to jump back a section on
+     its own partway through the closing animation. */
+  overflow-anchor:none;
 }
 img{ display:block; max-width:100%; }
 ::selection{ background:var(--gold); color:var(--blue); }
@@ -134,7 +144,10 @@ nav a:hover::after{ transform:scaleX(1); }
 #river .count span{ display:block; margin-top:4px; font-size:9px; font-weight:700;
                      letter-spacing:.24em; text-transform:uppercase; color:rgba(20,66,127,.45); }
 @media (max-width:760px){
-  #river{ height:360svh; }
+  /* 360svh of pin on a phone read as a wall of dead scroll between the
+     headline settling and the wordmark finishing - shortened so the
+     same wave-to-word beat now costs noticeably less scrolling. */
+  #river{ height:260svh; }
   #river .bot p{ display:none; }
   #river .top{ max-width:88vw; }
 }
@@ -312,8 +325,12 @@ nav a:hover::after{ transform:scaleX(1); }
      off to the side of; below 900px the holder drops out of sticky
      entirely so the five cards just read top to bottom, each fully
      clear of the one before it - stackDrive() skips this width too. */
-  .cardholder{ position:relative; top:auto; height:auto; min-height:76vh; margin-bottom:6vh; }
-  .card{ position:relative; inset:auto; min-height:76vh; }
+  /* 76vh made each card read as its own full screen (plus overflow) on
+     a phone; a shorter, more content-hugging card lets the next one's
+     edge show as a cue that there is more below, instead of five
+     consecutive full-height panels. */
+  .cardholder{ position:relative; top:auto; height:auto; min-height:auto; margin-bottom:5vh; }
+  .card{ position:relative; inset:auto; min-height:60vh; }
   .sc-in{ grid-template-columns:1fr; align-content:center; gap:clamp(18px,3vh,30px); }
   .t-paper .sc-txt,.t-paper .sc-fig,.t-ink .sc-txt,.t-frame .sc-txt,
   .t-floor .sc-txt,.t-signal .sc-txt,.t-signal .sc-fig{ grid-column:1 / -1; }
@@ -399,7 +416,10 @@ nav a:hover::after{ transform:scaleX(1); }
 .bbar i{ display:block; height:100%; width:0; background:var(--gold); }
 
 @media (max-width:760px){
-  #build{ height:380vh; }
+  /* same story as the river: 380vh of pin made the model's build
+     sequence cost far more scrolling than the payoff justified on a
+     phone-sized screen. */
+  #build{ height:280vh; }
   .build-top{ max-width:82vw; }
   .mcap b{ font-size:10px; letter-spacing:.14em; }
 }
