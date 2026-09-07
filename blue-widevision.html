@@ -441,6 +441,15 @@ nav a:hover::after{ transform:scaleX(1); }
      read as too much dead scroll on a phone - shorter again here. */
   #build{ height:185vh; }
   .build-top{ max-width:82vw; }
+  /* the model itself, framed down to a contained viewer instead of
+     filling the whole pinned screen - full-bleed on a small phone left
+     nothing else to look at while it built and made the drag-to-turn
+     gesture feel like it was dragging the page, not the object. */
+  .mfield{ inset:auto; left:50%; top:52%; width:88vw; height:46vh;
+           transform:translate(-50%,-50%); border-radius:16px; overflow:hidden;
+           background:rgba(255,255,255,.4);
+           box-shadow:0 24px 70px rgba(20,66,127,.16); }
+  .mglow{ width:100vw; height:52vh; }
   .mcap b{ font-size:10px; letter-spacing:.14em; }
 }
 
