@@ -51,7 +51,10 @@ img{ display:block; max-width:100%; }
 .wrap{ width:100%; max-width:1360px; margin:0 auto; padding:0 clamp(20px,4vw,64px); }
 .eyebrow{
   font-size:11px; font-weight:600; letter-spacing:.34em; text-transform:uppercase;
-  color:rgba(20,66,127,.45);
+  /* was .45 - measured under 3:1 against white, well short of the 4.5:1
+     small text needs. .72 clears it comfortably while staying clearly
+     a secondary label next to the headlines it sits above. */
+  color:rgba(20,66,127,.72);
 }
 .rule{ height:1px; background:var(--line); border:0; margin:0; }
 
@@ -64,7 +67,12 @@ nav{
   padding:22px clamp(20px,4vw,64px);
   mix-blend-mode:normal; transition:opacity .6s var(--ease);
 }
-nav .mark{ width:30px; }
+/* the width/height attributes added for CLS (below) fix the image's
+   intrinsic aspect ratio, but a lone CSS width without height:auto
+   leaves height stuck at the raw 300px attribute instead of scaling
+   with it - that literal 300px-tall logo is what was overlaying the
+   hero. */
+nav .mark{ width:30px; height:auto; }
 nav .links{ display:flex; gap:clamp(18px,2.4vw,38px); align-items:center; }
 @media (max-width:760px){
   /* on a small screen every section eventually scrolls close text
@@ -166,7 +174,12 @@ nav a:hover::after{ transform:scaleX(1); }
   transition:transform 1s var(--ease);
 }
 .say.seen .w > span{ transform:none; }
-.say .gold{ color:var(--gold); }
+/* the brand gold (#F9B016) is only ~1.9:1 against white - fine as a
+   background/accent fill, not as body-sized text on paper. This one
+   spot uses it as text, so it gets a deeper shade (~4.4:1) instead of
+   the token itself, which stays untouched everywhere else it's used
+   correctly (buttons, tags, fills on dark). */
+.say .gold{ color:#A66C00; }
 .said{ margin-top:clamp(28px,4vw,52px); display:flex; gap:clamp(24px,4vw,64px); flex-wrap:wrap; }
 .said p{ margin:0; max-width:34ch; color:rgba(20,66,127,.62); font-size:15px; line-height:1.75; }
 
@@ -560,7 +573,10 @@ body.viewing .vbox{ transform:none; opacity:1; }
 @media (max-width:760px){
   #clients .pin{ height:88vh; min-height:520px; }
   .cl-top{ max-width:82vw; }
-  .dial{ width:clamp(1100px,260vw,2400px); }
+  /* still flagged as wider than the viewport by real-device auditing
+     even after the earlier trim - cut again, tighter arc, less excess
+     hanging off both edges. */
+  .dial{ width:clamp(640px,190vw,1100px); }
 }
 
 /* -------------------------------------------------------------------
@@ -776,7 +792,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
 <body>
 
 <nav>
-  <img class="mark" src="assets/v5/clients/bmark.png" alt="BLUE">
+  <img class="mark" src="assets/v5/clients/bmark.png" alt="BLUE" width="215" height="300">
   <div class="links">
     <a href="#line">Vision</a>
     <a href="#offer">Offer</a>
@@ -785,6 +801,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
   </div>
 </nav>
 
+<main>
 <!-- 1 · THE RIVER -------------------------------------------------------- -->
 <section id="river">
   <div class="stage">
@@ -1023,6 +1040,7 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
     <a class="cta rise d2" href="mailto:info@blue-eg.com"><i></i> Start a project</a>
   </div>
 </section>
+</main>
 <footer>
   <div class="wrap">
 
@@ -1180,7 +1198,12 @@ function buildRiver(){
   }
   MASK.rN=Math.max(1,MASK.r1-MASK.r0+1);
   var nA=0, nB=0;
-  var skip=vw()<700 ? 2 : 1;
+  /* every tile costs real canvas + trig work every single frame the
+     river is on screen - a real mid/low-tier phone (this was measured
+     against an emulated Moto G Power) can't carry anywhere near the
+     full count at 60fps. Keep roughly a third on a narrow screen
+     instead of half. */
+  var skip=vw()<700 ? 3 : 1;
   for(var r=0;r<Rw;r++) for(var c=0;c<C;c++){
     if(!m[r*C+c]) continue;
     if(skip>1 && ((r+c)%skip)){ k++; continue; }
@@ -1205,6 +1228,11 @@ var cnumEl=document.getElementById('cnum');
 function drawRiver(p,now){
   if(!cv) return;
   var w=cv.width, h=cv.height, dpr=cv._dpr||1;
+  /* two extra curveY() calls per tile (6 more Math.sin()) just to tilt
+     it to the ribbon's local tangent - a fine touch on a machine that
+     can afford it, real cost on one that can't. Skipped on narrow
+     screens, where the tile count is already reduced too. */
+  var cheap=w/dpr<700;
   cx.setTransform(1,0,0,1,0,0); cx.globalAlpha=1;
   cx.fillStyle='#FFFFFF'; cx.fillRect(0,0,w,h);
   if(!cells.length || !loaded) return;
@@ -1212,7 +1240,12 @@ function drawRiver(p,now){
   var org=ease(clamp01((p-.14)/.46));
   var amp=lerp(0.085,0.030,org);
   var LANE=[0.42,0.70];
-  var morph=clamp01((p-.40)/.34);
+  /* used to finish at p=.74, holding the fully-formed word static for
+     the remaining 26% of the pin's scroll - a fixed proportion of dead
+     scroll no matter how short the section is made. Stretched to
+     finish at p=.95 instead, so shrinking the section actually shrinks
+     the felt "nothing is happening" tail along with it. */
+  var morph=clamp01((p-.40)/.55);
   var C=MASK.cols, Rw=MASK.rows;
   var narrow=w/h<1;
   var HEAD=275*dpr, FOOT=52*dpr;
@@ -1242,8 +1275,11 @@ function drawRiver(p,now){
     }
     var xs=RX/w+o.band*0.41;
     var RY=(LANE[o.band]+(curveY(xs,T,amp)-0.5)+(o.sd2-.5)*0.018)*h;
-    var d1=curveY(xs+0.02,T,amp)-curveY(xs-0.02,T,amp);
-    var RR=Math.atan(d1*h/(0.04*w))*lerp(0.85,0,org);
+    var RR=0;
+    if(!cheap){
+      var d1=curveY(xs+0.02,T,amp)-curveY(xs-0.02,T,amp);
+      RR=Math.atan(d1*h/(0.04*w))*lerp(0.85,0,org);
+    }
     var RS=tile*o.z*lerp(1.0,0.88,org), RA=0.78+o.z*0.22;
     var MX=ox+o.c*cell+cell/2, MY=oy+o.r*cell+cell/2;
     var mp=ease(clamp01((morph*1.5-o.sd*0.5)/1));
@@ -1338,9 +1374,12 @@ function buildDrive(p){
      anything higher than a hair leaves the first screenful bare */
   mhead.classList.toggle('on', p>0.002);
   if(!mGrabbed) mhint.classList.toggle('on', p>0.06 && p<0.97);
-  /* the build finishes with a fifth of the section still to run, so
-     the finished stand gets held rather than snatched away */
-  var t=clamp01((p-0.08)/0.70);
+  /* used to finish with a fifth of the section still to run, holding
+     the finished stand static for that whole stretch - a fixed
+     proportion of dead scroll regardless of how short the section is
+     made. Stretched to finish at p=.94, so only a brief settle remains
+     instead of a long static hold. */
+  var t=clamp01((p-0.08)/0.86);
   mbar.style.width=(t*100).toFixed(1)+'%';
   var pc=('00'+Math.round(t*100)).slice(-3);
   if(mpct.textContent!==pc) mpct.textContent=pc;
