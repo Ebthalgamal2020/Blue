@@ -821,6 +821,18 @@ var VIEWS = {
   front: { from:[0.6,10.5, 24.0],  to:[0.3, 1.95,10.6], lookA:[0,4.95,0], lookB:[0,1.55,0] },
   top:   { from:[10.5,20.0,15.0],  to:[4.6, 7.40, 6.2], lookA:[0,4.40,0], lookB:[0,1.10,0] }
 };
+/* embedded in the homepage's small card the frame above put the model
+   nearly edge to edge - pull every camera back from the object (not
+   just narrow the lens, which would also flatten the perspective) so
+   it reads as a small object seen whole, with real margin around it */
+if (EMBED){
+  var EMBED_PULLBACK = 1.4;
+  ['hero','front','top'].forEach(function(k){
+    var v = VIEWS[k];
+    v.from = v.from.map(function(n){ return n * EMBED_PULLBACK; });
+    v.to   = v.to.map(function(n){ return n * EMBED_PULLBACK; });
+  });
+}
 var view = VIEWS.hero, viewMix = 1, viewFrom = VIEWS.hero;
 var camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 /* the camera must not fly in from the world origin on first paint */
