@@ -445,11 +445,12 @@ nav a:hover::after{ transform:scaleX(1); }
      filling the whole pinned screen - full-bleed on a small phone left
      nothing else to look at while it built and made the drag-to-turn
      gesture feel like it was dragging the page, not the object. */
-  .mfield{ inset:auto; left:50%; top:52%; width:88vw; height:46vh;
+  .mfield{ inset:auto; left:50%; top:52%; width:72vw; height:34vh;
            transform:translate(-50%,-50%); border-radius:16px; overflow:hidden;
            background:rgba(255,255,255,.4);
            box-shadow:0 24px 70px rgba(20,66,127,.16); }
-  .mglow{ width:100vw; height:52vh; }
+  .mfield .still{ width:min(420px,56vw); }
+  .mglow{ width:88vw; height:40vh; }
   .mcap b{ font-size:10px; letter-spacing:.14em; }
 }
 
