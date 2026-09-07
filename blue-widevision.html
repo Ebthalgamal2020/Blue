@@ -32,7 +32,7 @@
    on every mobile browser - some still let the document's own scroll
    root (html) drift sideways even with a clipped body underneath it.
    Both, plus a hard width cap, is the standard belt-and-braces fix. */
-html{ scroll-behavior:auto; overflow-x:hidden; width:100%; }
+html{ scroll-behavior:auto; }
 body{
   margin:0; background:var(--paper); color:var(--blue);
   font-family:'Montserrat',system-ui,-apple-system,sans-serif;
@@ -45,6 +45,14 @@ body{
      its own partway through the closing animation. */
   overflow-anchor:none;
 }
+/* clips real horizontal overflow (the .e letter's off-screen entrance,
+   the client wheel) without touching html/body's own overflow - setting
+   overflow-x on the root or body breaks position:sticky for every
+   pinned section below it in this browser; overflow-x:clip on a plain
+   block ancestor doesn't, and clip specifically (not hidden) avoids the
+   visible-to-auto overflow-y mixing rule that would otherwise turn this
+   into a second, unwanted scroll container. */
+main{ overflow-x:clip; }
 img{ display:block; max-width:100%; }
 ::selection{ background:var(--gold); color:var(--blue); }
 
@@ -573,10 +581,12 @@ body.viewing .vbox{ transform:none; opacity:1; }
 @media (max-width:760px){
   #clients .pin{ height:88vh; min-height:520px; }
   .cl-top{ max-width:82vw; }
-  /* still flagged as wider than the viewport by real-device auditing
-     even after the earlier trim - cut again, tighter arc, less excess
-     hanging off both edges. */
-  .dial{ width:clamp(640px,190vw,1100px); }
+  /* NOT shrunk here: the wheel's radius is what sets the spacing
+     between logos (kmark's own size is fixed), so a narrower .dial
+     packs the marks tighter and makes them overlap. #clients already
+     clips (overflow-x:clip) and .pin clips (overflow:hidden), so the
+     desktop clamp's own vw scaling is what should carry this size
+     down safely - it does not need a second, tighter override. */
 }
 
 /* -------------------------------------------------------------------
