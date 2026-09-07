@@ -97,7 +97,7 @@ nav a:hover::after{ transform:scaleX(1); }
    hero this brand already had, re-themed to this page's own tokens
    and run off this page's own scroll engine rather than a second one.
    ------------------------------------------------------------------- */
-#river{ position:relative; height:420svh; background:var(--paper); }
+#river{ position:relative; height:260svh; background:var(--paper); }
 #river .stage{
   position:sticky; top:0; height:100svh; overflow:hidden; background:var(--paper);
 }
@@ -144,10 +144,10 @@ nav a:hover::after{ transform:scaleX(1); }
 #river .count span{ display:block; margin-top:4px; font-size:9px; font-weight:700;
                      letter-spacing:.24em; text-transform:uppercase; color:rgba(20,66,127,.45); }
 @media (max-width:760px){
-  /* 360svh of pin on a phone read as a wall of dead scroll between the
-     headline settling and the wordmark finishing - shortened so the
-     same wave-to-word beat now costs noticeably less scrolling. */
-  #river{ height:260svh; }
+  /* still read as too much dead scroll at 260svh - cut hard, not
+     incrementally, so the wave-to-word beat finishes in a swipe or
+     two instead of a long, empty middle stretch. */
+  #river{ height:170svh; }
   #river .bot p{ display:none; }
   #river .top{ max-width:88vw; }
 }
@@ -354,7 +354,7 @@ nav a:hover::after{ transform:scaleX(1); }
    The stage is dark because the model is lit, but it stays a stage —
    an object on the page's own light ground, not a dark section.
    ------------------------------------------------------------------- */
-#build{ position:relative; height:460vh; background:var(--neutral); }
+#build{ position:relative; height:280vh; background:var(--neutral); }
 #build .pin{ position:sticky; top:0; height:100vh; overflow:hidden; }
 
 .build-top{ opacity:0; transform:translateY(12px);
@@ -416,10 +416,9 @@ nav a:hover::after{ transform:scaleX(1); }
 .bbar i{ display:block; height:100%; width:0; background:var(--gold); }
 
 @media (max-width:760px){
-  /* same story as the river: 380vh of pin made the model's build
-     sequence cost far more scrolling than the payoff justified on a
-     phone-sized screen. */
-  #build{ height:280vh; }
+  /* same story as the river: even after the desktop cut, this still
+     read as too much dead scroll on a phone - shorter again here. */
+  #build{ height:185vh; }
   .build-top{ max-width:82vw; }
   .mcap b{ font-size:10px; letter-spacing:.14em; }
 }
