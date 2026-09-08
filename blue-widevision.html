@@ -386,11 +386,6 @@ nav a:hover::after{ transform:scaleX(1); }
 .mfield iframe{ position:absolute; inset:0; width:100%; height:100%; border:0;
                 opacity:0; transition:opacity 1s var(--ease); }
 .mfield.on iframe{ opacity:1; }
-/* the render stands in, ghosted, until the scene has booted */
-.mfield .still{ position:absolute; left:50%; top:54%; width:min(720px,58vw);
-                transform:translate(-50%,-50%); opacity:.14; filter:grayscale(1);
-                transition:opacity .9s var(--ease); }
-.mfield.on .still{ opacity:0; }
 /* a little light behind it, so the structure has somewhere to stand */
 .mglow{ position:absolute; left:50%; top:54%; width:124vw; height:82vh; z-index:0;
         transform:translate(-50%,-50%); pointer-events:none;
@@ -976,7 +971,6 @@ footer::before{ content:''; position:absolute; top:0; left:0; right:0; height:2p
   <div class="pin">
     <div class="mglow"></div>
     <div class="mfield" id="mstage">
-      <img class="still" src="assets/metro.png" alt="METRO retail build" loading="lazy" width="1294" height="1216">
       <iframe id="mmodel" title="METRO — live model. Drag to turn it."
               loading="lazy"></iframe>
     </div>
