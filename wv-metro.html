@@ -214,7 +214,10 @@ var scene = new THREE.Scene();
 scene.background = EMBED ? null : new THREE.Color(PAL.dark);
 /* the room falls away into the same navy the site is built in -- or,
    embedded, into the page's own paper so there is no visible edge */
-scene.fog = new THREE.Fog(EMBED ? 0xF1F4F8 : PAL.dark, 26, 70);
+/* embedded, the camera stands much further back (narrow phone frames
+   need the distance to keep the build's sides in shot), so the haze has
+   to start further out too or the whole thing fades into the paper */
+scene.fog = new THREE.Fog(EMBED ? 0xF1F4F8 : PAL.dark, EMBED ? 46 : 26, EMBED ? 140 : 70);
 
 /* A long lens. Wide angles make an architectural object look like a
    toy - 32mm-equivalent keeps the verticals calm and the stand read
@@ -821,16 +824,20 @@ var VIEWS = {
   front: { from:[0.6,10.5, 24.0],  to:[0.3, 1.95,10.6], lookA:[0,4.95,0], lookB:[0,1.55,0] },
   top:   { from:[10.5,20.0,15.0],  to:[4.6, 7.40, 6.2], lookA:[0,4.40,0], lookB:[0,1.10,0] }
 };
-/* embedded in the homepage's small card the frame above put the model
-   nearly edge to edge - pull every camera back from the object (not
-   just narrow the lens, which would also flatten the perspective) so
-   it reads as a small object seen whole, with real margin around it */
+/* Embedded in the homepage the build has to be readable whole, at a
+   glance, on a phone - so the camera stands further back than it does
+   in the standalone viewer, which is free to fill a whole screen.
+   The two ends need different amounts. `from` already frames the whole
+   exploded stack from a distance and only wants a little air; `to`
+   deliberately closes right in on the finished stand, which is what was
+   cropping it against the frame at 100%, so it gets pulled back hardest.
+   Distance, not a narrower lens: a narrower lens would flatten it. */
 if (EMBED){
-  var EMBED_PULLBACK = 1.4;
+  var PULL_FROM = 1.30, PULL_TO = 1.38;
   ['hero','front','top'].forEach(function(k){
     var v = VIEWS[k];
-    v.from = v.from.map(function(n){ return n * EMBED_PULLBACK; });
-    v.to   = v.to.map(function(n){ return n * EMBED_PULLBACK; });
+    v.from = v.from.map(function(n){ return n * PULL_FROM; });
+    v.to   = v.to.map(function(n){ return n * PULL_TO; });
   });
 }
 var view = VIEWS.hero, viewMix = 1, viewFrom = VIEWS.hero;
@@ -900,6 +907,18 @@ function setCamera(t, now){
      the drag can move around the object instead of sliding it sideways */
   var rad  = Math.sqrt(px * px + pz * pz);
   var dist = Math.sqrt(rad * rad + py * py);
+  /* the lens angle three.js is given is the VERTICAL one, so a tall
+     narrow frame - a phone holding this full width - quietly crops the
+     build off at the sides however far back the camera stands. Below
+     the shape these distances were framed for, stand back by however
+     much the frame has narrowed, so the object keeps its margin
+     whatever window it is being seen through. Compensating by the full
+     ratio overshoots badly (a phone frame is less than half the framed
+     shape, and the build ends up a speck in the far distance) - the
+     square root of it gives the sides back without throwing the object
+     away. */
+  var FRAMED_ASPECT = 1.15;
+  if (camera.aspect < FRAMED_ASPECT) dist *= Math.sqrt(FRAMED_ASPECT / camera.aspect);
   var elev = clamp(Math.atan2(py, rad) + orb.el, 0.05, 1.32);
   var azim = Math.atan2(pz, px) + idle + ptr.x * 0.10 + orb.az;
   var rr = Math.cos(elev) * dist;

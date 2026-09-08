@@ -441,16 +441,11 @@ nav a:hover::after{ transform:scaleX(1); }
      read as too much dead scroll on a phone - shorter again here. */
   #build{ height:185vh; }
   .build-top{ max-width:82vw; }
-  /* the model itself, framed down to a contained viewer instead of
-     filling the whole pinned screen - full-bleed on a small phone left
-     nothing else to look at while it built and made the drag-to-turn
-     gesture feel like it was dragging the page, not the object. */
-  .mfield{ inset:auto; left:50%; top:52%; width:72vw; height:34vh;
-           transform:translate(-50%,-50%); border-radius:16px; overflow:hidden;
-           background:rgba(255,255,255,.4);
-           box-shadow:0 24px 70px rgba(20,66,127,.16); }
-  .mfield .still{ width:min(420px,56vw); }
-  .mglow{ width:88vw; height:40vh; }
+  /* the model keeps the full width of the pin here on purpose. Boxing
+     it into a small card only bought empty page around it; the room the
+     build actually needs is room INSIDE the frame, and that comes from
+     the camera standing further back (see EMBED_PULLBACK in
+     wv-metro.html), not from shrinking the window it is seen through. */
   .mcap b{ font-size:10px; letter-spacing:.14em; }
 }
 
